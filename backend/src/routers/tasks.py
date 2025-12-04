@@ -1,17 +1,21 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 from ..services import tasks
+
+from ..services.auth import require_user, require_edit
+from ..services.users import User
 
 
 v1_router = APIRouter(prefix="/tasks", tags=["tasks"])
 
 
 @v1_router.get("/")
-def get_all_tasks():
+def get_all_tasks(user: User = Depends(require_user)):
     tasks.get_all_tasks()
 
 
 @v1_router.put("/")
-def add_task():
+def add_task(authorized: bool = Depends(require_edit)):
+    return authorized
     tasks.add_task()
 
 

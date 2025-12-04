@@ -12,11 +12,7 @@ v1.include_router(users.v1_router)
 v1.include_router(tasks.v1_router)
 v1.include_router(news.v1_router)
 v1.include_router(documents.v1_router)
-
-
-@v1.post("/auth", tags=["users"])
-async def authenticate():
-    auth.authenticate()
+v1.include_router(auth.v1_router)
 
 
 @router.get("/health")

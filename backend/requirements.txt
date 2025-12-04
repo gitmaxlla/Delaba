@@ -1,3 +1,10 @@
-fastapi
+fastapi[standard]
 pydantic
 uvicorn
+sqlalchemy
+sqlalchemy.orm
+sqlalchemy-utils
+dotenv
+psycopg2-binary
+pwdlib[argon2]
+pyjwt
