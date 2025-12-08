@@ -1,27 +1,26 @@
-from fastapi import FastAPI, Request, HTTPException, Response
+from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 
-from .routers import router, get_version_list
+from .routers import router
 from .database import db
-from .services.users import add_an_user
+from .services.users import create_admin_user
 
 from .core.security import RateLimiter
 
 from .schemas.news import News
 from .schemas.users import User
-from .schemas.documents import Document, DocumentEvent
-from .schemas.tasks import Task, TaskEvent
+from .schemas.tasks import Task, Event
+from .schemas.channels import Channel
 
+from .routers.mock import mock_data
 
-News, User, DocumentEvent, Document, Task, TaskEvent
+News, User, Task, Event, Channel
+
 db.drop_all()
 db.create_all()
 
-
-first_init_token = add_an_user("First", "University1-Group-Subject-Year-Semester")["init_token"]
-add_an_user("Second", "University2-Group-Subject-Year-Semester")
-
-print(first_init_token)
+create_admin_user()
+mock_data()
 
 app = FastAPI()
 limiter = RateLimiter()
@@ -40,19 +39,9 @@ async def rate_limit(request: Request, call_next):
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost"],
+    allow_origins=["http://localhost:5173"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"]
 )
 app.include_router(router)
-
-
-@app.get("/", tags=["app"])
-async def about():
-    """
-    Check API availability and supported versions
-    """
-
-    return {"message": "Welcome to Delaba project API!",
-            "versions": get_version_list()}

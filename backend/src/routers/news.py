@@ -10,7 +10,7 @@ def get_all_news():
     news.get_all_news()
 
 
-@v1_router.put("/")
+@v1_router.post("/")
 def add_news():
     news.add_news()
 
@@ -23,11 +23,6 @@ def get_news(id):
 @v1_router.delete("/{id}")
 def delete_news(id):
     news.delete_news(id)
-
-
-@v1_router.put("/{id}")
-def update_news(id):
-    news.update_news(id)
 
 
 @v1_router.patch("/{id}/heading")
