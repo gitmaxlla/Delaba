@@ -7,21 +7,14 @@ class Task(BaseModel):
     id: int
     createdAt: datetime.datetime
     modifiedAt: datetime.datetime
-
+    type: str
     channel: str
     subject: str
     title: str
 
     deadline: datetime.datetime
-    subtasks: dict
-    fileHash: str
-
-
-class Event(BaseModel):
-    id: int
-    by: int
-    postedAt: datetime.datetime
-    message: str
+    subtasks: dict | None
+    fileHash: str | None
 
 
 class DocumentTaskCreationRequest(BaseModel):
@@ -37,3 +30,11 @@ class TodoTaskCreationRequest(BaseModel):
     channel: str
     deadline: datetime.datetime
     subtasks: List[str]
+
+
+class TaskDeadline(BaseModel):
+    deadline: datetime.datetime
+
+
+class TaskTitle(BaseModel):
+    title: str

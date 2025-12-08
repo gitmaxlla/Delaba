@@ -9,12 +9,12 @@ from .core.security import RateLimiter
 
 from .schemas.news import News
 from .schemas.users import User
-from .schemas.tasks import Task, Event
+from .schemas.tasks import Task
 from .schemas.channels import Channel
 
 from .routers.mock import mock_data
 
-News, User, Task, Event, Channel
+News, User, Task, Channel
 
 db.drop_all()
 db.create_all()

@@ -1,9 +1,11 @@
 from ..database.db import Base
 from sqlalchemy.dialects.postgresql import BIT, JSONB
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy import String, Boolean, ForeignKey
 from ..models.users import Permissions, User as UserModel
 import math
+
+from ..schemas.news import News 
 
 
 class User(Base):
@@ -13,7 +15,7 @@ class User(Base):
     role: Mapped[str] = mapped_column(default="Студент")
 
     channel: Mapped[str] = \
-        mapped_column(ForeignKey("channels.name", ondelete="CASCADE"))
+        mapped_column(ForeignKey("channels.name"))
 
     permissions: Mapped[Permissions] = \
         mapped_column(
@@ -24,6 +26,9 @@ class User(Base):
     initialized: Mapped[Boolean] = mapped_column(Boolean(), default=False)
 
     data: Mapped[JSONB] = mapped_column(JSONB, default={})
+
+    news: Mapped["News"] = relationship(backref="user",
+                                        cascade="all, delete")
 
 
 def user_from_schema(user: User) -> UserModel:

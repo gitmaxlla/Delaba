@@ -17,6 +17,7 @@ def mock_data():
     first_user_channel = create_channel(ChannelRequest(channel="456"))
 
     first_user_data = add_user("123", "123", "123", Permissions.VIEW_CHANNEL)
+    print(f"\t\t{first_user_data}")
 
     user_data1 = add_user("one", "1", "123", Permissions.VIEW_CHANNEL)
     user_data2 = add_user("two", "3", "123", Permissions.VIEW_CHANNEL)

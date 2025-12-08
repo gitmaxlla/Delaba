@@ -11,12 +11,19 @@ class News(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     section: Mapped[str] = mapped_column(nullable=True)
+    channel: Mapped[str] = mapped_column(ForeignKey("channels.name"))
 
     postedAt: Mapped[datetime.datetime] = mapped_column(
         DateTime, default=func.now())
 
-    by: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
+    modifiedAt: Mapped[datetime.datetime] = mapped_column(
+        DateTime, default=func.now())
 
+    by: Mapped[int] = mapped_column(ForeignKey("users.id"))
+    bound_task_id: Mapped[int] = mapped_column(
+        ForeignKey("tasks.id"), nullable=True)
+
+    title: Mapped[str] = mapped_column()
     message: Mapped[str] = mapped_column()
 
 

@@ -1,13 +1,15 @@
 from fastapi import APIRouter, Depends, UploadFile, HTTPException, Form
+from fastapi.responses import FileResponse
 from ..services import tasks
-import fleep
 
+import fleep
 from ..services.auth import logged_in, moderator, admin, owns_channel, \
                             task_id_reachable
 from ..core.security import generate_uuid
 
 from ..models.tasks import DocumentTaskCreationRequest, Task, \
-                           TodoTaskCreationRequest
+                           TodoTaskCreationRequest, TaskDeadline, \
+                           TaskTitle
 from ..models.users import User
 from typing import Annotated
 
@@ -83,38 +85,34 @@ async def add_document_task(file: UploadFile,
     tasks.add_document_task(request, file_hash)
 
 
-@v1_router.get("/{id}")
+@v1_router.get("/{id}", response_model=Task)
 def get_task(id: int,
-             permitted: User = Depends(task_id_reachable),
-             response_model=Task):
+             permitted: User = Depends(task_id_reachable)):
     return tasks.get_task(id)
 
 
+@v1_router.get("/{id}/file")
+def get_document_file(id: int,
+                      permitted: User = Depends(task_id_reachable)):
+    file_hash = tasks.get_document_file_hash(id)
+    return FileResponse(f"./uploads/{file_hash}", media_type="application_pdf")
+
+
 @v1_router.delete("/{id}")
-def delete_task(id):
+def delete_task(id,
+                permitted: User = Depends(task_id_reachable)):
     tasks.delete_task(id)
 
 
 @v1_router.patch("/{id}/deadline")
-def change_task_deadline(id):
-    tasks.change_task_deadline(id)
+def change_task_deadline(id: int,
+                         request: TaskDeadline,
+                         permitted: User = Depends(task_id_reachable)):
+    tasks.change_task_deadline(id, request.deadline)
 
 
-@v1_router.patch("/{id}/heading")
-def change_task_heading(id):
-    tasks.change_task_heading(id)
-
-
-@v1_router.patch("/{id}/body")
-def change_task_body(id):
-    tasks.change_task_body(id)
-
-
-@v1_router.patch("/{id}/document")
-def change_task_document(id):
-    tasks.change_task_body(id)
-
-
-@v1_router.patch("/{id}/todo")
-def change_task_todo(id):
-    tasks.change_task_body(id)
+@v1_router.patch("/{id}/title")
+def change_task_heading(id: int,
+                        request: TaskTitle,
+                        permitted: User = Depends(task_id_reachable)):
+    tasks.change_task_heading(id, request.title)

@@ -14,6 +14,8 @@ from ..services.users import update_user_password, \
                              mark_user_initialized, \
                              get_user as get_user_model
 from ..services.tasks import get_task as get_task_model
+from ..services.news import get_news_id as get_news_model
+from sqlalchemy.exc import NoResultFound
 
 v1_router = APIRouter(prefix="/auth", tags=["auth"])
 auth_scheme = HTTPBearer()
@@ -154,7 +156,15 @@ def manages_user_id(id: int, user: User = Depends(moderator)) -> User:
 
 
 def task_id_reachable(id: int, user: User = Depends(logged_in)) -> User:
+    task = get_task_model(id)
     if not has_admin_rights(user) \
-       and get_task_model(id).channel != user.channel:
+       and task.channel != user.channel:
+        raise HTTPException(403, "Insufficient rights.")
+    return user
+
+
+def news_id_reachable(id: int, user: User = Depends(logged_in)) -> User:
+    if not has_admin_rights(user) \
+       and get_news_model(id).channel != user.channel:
         raise HTTPException(403, "Insufficient rights.")
     return user

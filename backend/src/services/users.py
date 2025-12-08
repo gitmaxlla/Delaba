@@ -32,7 +32,6 @@ def update_user_data(user: UserModel, data: dict):
 
 def get_user_data(user: UserModel) -> dict:
     data = {}
-    print(user)
 
     with db.Session() as session:
         db_user = session.get(UserSchema, user.id)
