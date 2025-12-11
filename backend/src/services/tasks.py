@@ -8,26 +8,33 @@ from ..models.tasks import Task as TaskModel, \
 from sqlalchemy import select
 from fastapi import HTTPException
 from ..models.users import User as UserModel
-
+import os
 import datetime
+
 
 def add_todo_task(request: TodoTaskCreationRequest):
     with db.Session() as session:
-        session.add(TaskSchema(channel=request.channel,
-                               title=request.title,
-                               deadline=request.deadline,
-                               subtasks=request.subtasks,
-                               subject=request.subject,
-                               type="todo"))
+        newTask = TaskSchema(channel=request.channel,
+                             title=request.title,
+                             deadline=request.deadline,
+                             subtasks=request.subtasks,
+                             subject=request.subject,
+                             type="todo")
+        session.add(newTask)
         session.commit()
+
+        return newTask.id
 
 
 def add_document_task(request: DocumentTaskCreationRequest, file_hash: str):
     with db.Session() as session:
-        session.add(TaskSchema(channel=request.channel, title=request.title,
-                               deadline=request.deadline, fileHash=file_hash,
-                               subject=request.subject, type="document"))
+        newTask = TaskSchema(channel=request.channel, title=request.title,
+                             deadline=request.deadline, fileHash=file_hash,
+                             subject=request.subject, type="document")
+        session.add(newTask)
         session.commit()
+
+        return newTask.id
 
 
 def get_tasks(channel):
@@ -53,10 +60,20 @@ def get_task(id: int) -> TaskModel:
 
 
 def delete_task(id: int):
+    hadFileHash = None
+
     with db.Session() as session:
         task = session.get(TaskSchema, id)
+        hadFileHash = task.fileHash
         session.delete(task)
         session.commit()
+
+    with db.Session() as session:
+        file_used = session.query(TaskSchema) \
+                      .filter(TaskSchema.fileHash == hadFileHash).first()
+
+        if not file_used:
+            os.remove(f"./uploads/{hadFileHash}")
 
 
 def change_task_deadline(id, deadline: datetime.datetime):

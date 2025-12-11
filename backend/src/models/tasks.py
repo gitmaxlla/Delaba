@@ -13,7 +13,7 @@ class Task(BaseModel):
     title: str
 
     deadline: datetime.datetime
-    subtasks: dict | None
+    subtasks: list | None
     fileHash: str | None
 
 

@@ -36,7 +36,7 @@ def add_todo_task(request: TodoTaskCreationRequest,
     request.channel = owns_channel if owns_channel != "" \
         else request.channel
 
-    tasks.add_todo_task(request)
+    return tasks.add_todo_task(request)
 
 
 @v1_router.post("/document")
@@ -82,7 +82,7 @@ async def add_document_task(file: UploadFile,
     file_hash = hasher.hexdigest()
     os.rename(f"./tmp/{handle}", f"./uploads/{file_hash}")
 
-    tasks.add_document_task(request, file_hash)
+    return tasks.add_document_task(request, file_hash)
 
 
 @v1_router.get("/{id}", response_model=Task)

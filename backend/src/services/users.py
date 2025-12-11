@@ -9,7 +9,10 @@ from ..core.security import generate_uuid, hash as pwdlib_hash
 from ..models.users import User as UserModel, UserCreationResponse
 from ..internal.root import ADMIN_INIT_TOKEN
 
+from ..services.channels import create_channel
 from ..schemas.channels import Channel
+from ..models.channels import ChannelRequest
+
 from sqlalchemy import select
 from sqlalchemy.exc import NoResultFound
 
@@ -28,6 +31,15 @@ def update_user_data(user: UserModel, data: dict):
         db_user = session.get(UserSchema, user.id)
         db_user.data = data
         session.commit()
+
+
+def get_user_permissions(user: UserModel) -> int:
+    with db.Session() as session:
+        db_user = session.get(UserSchema, user.id)
+        session.flush()
+        session.refresh(db_user)
+
+        return int(db_user.permissions, 2)
 
 
 def get_user_data(user: UserModel) -> dict:
@@ -138,10 +150,14 @@ def add_user(login: str, role: str,
     return UserCreationResponse(id=id, init_token=init_token)
 
 
-def user_by_login(login: str) -> UserModel:
+def user_by_login(login: str) -> UserSchema:
     query = select(UserSchema).where(UserSchema.login == login)
     data = db.Session().execute(query)
-    return user_from_schema(data.scalar_one())
+
+    try:
+        return data.scalar_one()
+    except NoResultFound:
+        raise HTTPException(404, "No user with such login found.")
 
 
 def get_user(id: int) -> UserModel:
@@ -155,6 +171,7 @@ def get_user(id: int) -> UserModel:
 
 
 def create_admin_user():
+    create_channel(ChannelRequest(channel=""))
     user = UserSchema(
                 id=0,
                 login="",

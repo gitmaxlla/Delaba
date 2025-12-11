@@ -19,7 +19,7 @@ class NewsCreationRequest(BaseModel):
     section: str
     channel: str
     title: str
-    bound_task_id: int | None
+    bound_task_id: int | None = None
     message: str
 
 

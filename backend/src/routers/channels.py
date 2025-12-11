@@ -6,7 +6,7 @@ from ..models.news import News
 from ..models.tasks import Task
 
 from ..models.channels import ChannelRequest
-from ..services.auth import admin
+from ..services.auth import admin, logged_in
 from ..services.channels import users_by_channel as get_users_by_channel, \
                               tasks_by_channel as get_tasks_by_channel, \
                               news_by_channel as get_news_by_channel, \
@@ -36,8 +36,8 @@ def tasks_by_channel(channel: str,
 
 
 @v1_router.get("/")
-def get_channels(admin: User = Depends(admin)) -> List[str]:
-    return get_channels_service()
+def get_channels(user: User = Depends(logged_in)) -> List[str]:
+    return get_channels_service(user)
 
 
 @v1_router.post("/")

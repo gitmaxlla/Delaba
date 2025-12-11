@@ -7,6 +7,8 @@ from ..models.users import User
 from ..models.news import NewsCreationRequest, NewsMessage, \
                           NewsTitle, NewsSection
 
+from ..services.users import get_user
+
 v1_router = APIRouter(prefix="/news", tags=["news"])
 
 
@@ -26,7 +28,11 @@ def add_news(request: NewsCreationRequest,
 
 @v1_router.get("/")
 def get_news(user: User = Depends(logged_in)):
-    return news.get_news(user.channel)
+    fetched_news = news.get_news(user.channel)
+    for news_ in fetched_news:
+        user = get_user(news_.by)
+        news_.by = user.role
+    return fetched_news
 
 
 @v1_router.get("/{id}")

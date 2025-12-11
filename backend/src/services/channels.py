@@ -9,7 +9,7 @@ from ..models.news import News as NewsModel
 from ..schemas.users import User as UserSchema
 from ..schemas.news import News as NewsSchema
 from ..schemas.tasks import Task as TaskSchema
-
+from ..models.users import has_admin_rights
 from typing import List
 from ..database import db
 from ..schemas.channels import Channel
@@ -47,15 +47,18 @@ def tasks_by_channel(channel: str) -> List[TaskModel]:
     return tasks
 
 
-def get_channels() -> List[str]:
-    with db.Session() as session:
-        channels = session.query(Channel).all()
-    return [channel.name for channel in channels]
+def get_channels(user: UserModel) -> List[str]:
+    if has_admin_rights(user):
+        with db.Session() as session:
+            channels = session.query(Channel).all()
+        return [channel.name for channel in channels]
+    else:
+        return [user.channel]
 
 
 def create_channel(request: ChannelRequest):
     with db.Session() as session:
-        session.add(Channel(name=request.channel))
+        session.merge(Channel(name=request.channel))
         session.commit()
 
 

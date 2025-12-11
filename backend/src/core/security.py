@@ -11,8 +11,7 @@ load_dotenv("../.env")
 
 DAY_SECS = 60 * 60 * 24
 REFRESH_TOKEN_EXPIRES_TIME_SEC = DAY_SECS * 20
-# TODO: Remove for prod
-ACCESS_TOKEN_EXPIRES_TIME_SEC = DAY_SECS * 15
+ACCESS_TOKEN_EXPIRES_TIME_SEC = 60
 
 REFRESH_SIGNATURE = os.getenv("JWT_REFRESH_SECRET")
 ACCESS_SIGNATURE = os.getenv("JWT_ACCESS_SECRET")
@@ -34,7 +33,7 @@ def generate_access_token(id: int) -> str:
     access_payload = {
         "id": id,
         "exp": int(time()) + ACCESS_TOKEN_EXPIRES_TIME_SEC,
-        "type": "refresh"
+        "type": "access"
     }
 
     access_token = jwt.encode(access_payload,
@@ -64,7 +63,7 @@ def get_refresh_payload(token: str) -> dict:
 
 
 class RateLimiter:
-    def __init__(self, per_minute=20):
+    def __init__(self, per_minute=300):
         self.requests_counter = defaultdict(int)
         self.requests_started = defaultdict(datetime.datetime.now)
         self.per_minute = per_minute

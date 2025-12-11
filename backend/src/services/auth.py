@@ -12,6 +12,7 @@ from ..core.security import validate_hash, \
 from ..services.users import update_user_password, \
                              user_by_login, \
                              mark_user_initialized, \
+                             user_from_schema, \
                              get_user as get_user_model
 from ..services.tasks import get_task as get_task_model
 from ..services.news import get_news_id as get_news_model
@@ -40,7 +41,7 @@ def require_access(request: Request) -> User:
     except ExpiredSignatureError:
         raise HTTPException(401, "Access token expired.")
     except Exception:
-        raise HTTPException(422, "Access token is invalid.")
+        raise HTTPException(401, "Access token is invalid.")
 
 
 def require_refresh(request: Request) -> User:
@@ -55,7 +56,7 @@ def require_refresh(request: Request) -> User:
     except ExpiredSignatureError:
         raise HTTPException(401, "Refresh token expired.")
     except Exception:
-        raise HTTPException(422, "Refresh token is invalid.")
+        raise HTTPException(401, "Refresh token is invalid.")
 
     id = int(credentials["id"])
     user = get_user_model(id)
@@ -86,11 +87,9 @@ async def authenticate_user(
         credentials: Credentials, response: Response) -> None:
     user: User = user_by_login(credentials.login)
 
-    if not user:
-        raise HTTPException(404, "User not found.")
-    elif not user.initialized:
+    if not user.initialized:
         raise HTTPException(403, "User should change the password beforehand.")
-    elif banned(user):
+    elif banned(user_from_schema(user)):
         raise HTTPException(403, "User is banned.")
 
     if validate_hash(credentials.password, user.password_hashed):
@@ -99,9 +98,18 @@ async def authenticate_user(
         raise HTTPException(401, "Provided user password does not match.")
 
 
+@v1_router.post("/logout", tags=["auth"])
+async def logout_user(response: Response) -> None:
+    response.delete_cookie(key="refresh", httponly=True)
+    response.delete_cookie(key="access", httponly=True)
+
+
 @v1_router.post("/refresh", tags=["auth"])
 async def refresh_access_token(response: Response,
                                user: User = Depends(require_refresh)) -> None:
+    if not user.initialized:
+        raise HTTPException(400, "Current user is not yet initialized.")
+
     response.set_cookie(
         key="access",
         value=generate_access_token(user.id),

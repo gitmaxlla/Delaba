@@ -13,14 +13,19 @@ from .schemas.tasks import Task
 from .schemas.channels import Channel
 
 from .routers.mock import mock_data
+import os
 
 News, User, Task, Channel
 
-db.drop_all()
+if os.getenv("ENABLE_MOCKING") == "true":
+    db.drop_all()
+
 db.create_all()
 
 create_admin_user()
-mock_data()
+
+if os.getenv("ENABLE_MOCKING") == "true":
+    mock_data()
 
 app = FastAPI()
 limiter = RateLimiter()

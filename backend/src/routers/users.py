@@ -17,6 +17,11 @@ def get_user_data(user: User = Depends(logged_in)):
     return users.get_user_data(user)
 
 
+@v1_router.get("/permissions", response_model=int)
+def get_self_permissions(user: User = Depends(logged_in)):
+    return users.get_user_permissions(user)
+
+
 @v1_router.get("/", response_model=List[UserModel])
 def get_users(moderator: UserModel = Depends(moderator)):
     return users.get_by_channel(moderator.channel)
