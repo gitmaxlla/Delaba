@@ -1,0 +1,17 @@
+@font-face {
+    font-family: "Ysabeau";
+    src: url("./fonts/YsabeauSC-VariableFont_wght.ttf");
+}
+
+@font-face {
+    font-family: "Dela";
+    src: url("./fonts/DelaGothicOne-Regular.ttf");
+}
+
+$ysabeau: "Ysabeau", sans-serif;
+$dela: "Dela", sans-serif;
+
+:export {
+    ysabeau: "Ysabeau", sans-serif;
+    dela: "Dela", sans-serif;
+}

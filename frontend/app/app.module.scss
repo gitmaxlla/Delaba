@@ -1,0 +1,500 @@
+@use "tailwindcss";
+@use 'fonts.module.scss' as fonts;
+@use './colors.module.scss' as colors;
+
+:root {
+    font-family: fonts.$ysabeau;
+    font-weight: 700;
+}
+
+h1 {
+    font-size: 72px;
+    text-wrap-mode: nowrap;
+    color: colors.$primary;
+}
+
+h2 {
+    font-size: 50px;
+    text-wrap-mode: nowrap;
+    color: colors.$primary;
+}
+
+.logo-main {
+    position: absolute;
+    opacity: 1.0;
+    transition: opacity 0.3s;
+    -webkit-user-drag: none;
+}
+
+.logo-main:hover {
+    opacity: 0.0;
+}
+
+.loading-message {
+    animation: page-loading 1s linear 2s infinite alternate;
+    opacity: 0;
+}
+
+@keyframes page-loading {
+    0% {
+        opacity: 0;
+    }
+
+    100% {
+        opacity: 1;
+    }
+}
+
+.page {
+    transition: transform 1s opacity 1s;
+    animation-name: page-in;
+    animation-fill-mode: forwards;
+    animation-duration: 0.5s;
+    width: 100%;
+    height: 100%;
+}
+
+@keyframes page-in {
+    0% {
+        opacity: 0.5;
+        transform: scale(0.95);
+    }
+
+    100% {
+        opacity: 1;
+        transform: scale(1.0);
+    }
+}
+
+.logo-hover {
+    position: absolute;
+    opacity: 0.0;
+    transition: opacity 0.3s;
+    -webkit-user-drag: none;
+}
+
+.logo-hover:hover {
+    opacity: 1.0;
+}
+
+.list-item {
+    height: 30px;
+    border-radius: 10px;
+    font-size: 20px;
+    display: flex;
+    padding: 20px 20px 20px 20px;
+    align-items: center;
+    justify-content: start;
+    background-color: colors.$primary;
+    transition: background-color 0.3s;
+    color: white;
+}
+
+.list-item:hover {
+    background-color: colors.$primary;
+    background: rgba(white, 0.3);
+}
+
+.switch {
+    position: relative;
+    width: 70px;
+    height: 17px;
+    user-select: none;
+    cursor: pointer;
+}
+
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    border-radius: 10px;
+    background-color: rgba(colors.$primary, 0.5);
+    transition: 0.5s;
+}
+
+.news-container {
+    background-color: transparent;
+    padding: 10px;
+    border-radius: 15px;
+    font-size: 1.1em;
+    color: black;
+    width: 390px;
+    height: 470px;
+    margin-bottom: 50px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.hover-info {
+    transition: opacity 0.15s;
+}
+
+.subject-hovered-container {
+    background-color: gray;
+    transition: background-color 0.5s, opacity 0.3s;
+    opacity: 1;
+    padding: 10px;
+    border-radius: 15px;
+    color: white;
+    width: 390px;
+    height: 210px;
+    display: flex;
+    flex-direction: column;
+    justify-content: start;
+    gap: 10px;
+    font-size: 1.1em;
+}
+
+.subject-hovered-container h3 {
+    text-align: center;
+    font-weight: bolder;
+}
+
+::-webkit-scrollbar {
+    width: 7px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: colors.$primary;
+    border-radius: 5px;
+}
+
+.tasks::-webkit-scrollbar-thumb {
+    background: colors.$primary;
+    border-radius: 5px;
+}
+
+.action-bar-container::-webkit-scrollbar {
+    width: 0px;
+}
+
+.action-bar-container {
+    display: flex;
+    gap: 25px;
+    overflow-y: scroll;
+    flex-direction: column;
+    align-items: center;
+}
+
+.news-container h3 {
+    font-weight: bolder;
+    text-align: center;
+}
+
+hr {
+    margin-top: 5px;
+    margin-bottom: 5px;
+}
+
+.news-container button {
+    background-color: white;
+    color: grey;
+    border-radius: 15px;
+    width: 100%;
+    margin-top: 5px;
+    padding-top: 10px;
+    padding-bottom: 10px;
+}
+
+.vertical-apart {
+    display: flex; 
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-around;
+    height: 90%;
+    width: auto;
+}
+
+.card-subject-compact {
+    min-width: 300px;
+    max-width: 300px;
+    height: 350px;
+    background-color: colors.$primary;
+    border-radius: 30px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding-left: 20px;
+    padding-right: 20px;
+    border: none;
+    transition: transform 0.3s, border 0.2s;
+}
+
+.settings-button {
+    background-color: colors.$primary;
+    padding: 7px 15px;
+    color: white; 
+    border-radius: 15px;
+    font-size: 30px;
+    font-weight: bold;
+    user-select: none;
+    cursor: pointer;
+}
+
+.settings-button:active {
+    background-color: rgba(colors.$primary, 0.7);
+}
+
+.card-subject-compact:hover {
+    transform: translateY(-20px);
+}
+
+.card-subject-compact:focus {
+    transform: translateY(-50px);
+    border: solid 5px black;
+}
+
+.card-page  {
+    width: 100%;
+    height: 250px;
+    padding: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: white;
+    border-radius: 30px 30px 0px 0px;
+}
+
+.card-subject-compact > div > h2  {
+    color: black;
+    padding: 10px;
+}
+
+.carousel {
+    height: 90%;
+    width: 40%;
+    display: flex;
+}
+
+.carousel-item {
+    user-select: none;
+    cursor: pointer;
+    height: 100%;
+    min-width: 50px;
+    flex: 1;
+    font-size: 3em;
+    padding: 10px;
+    overflow: hidden;
+    writing-mode: sideways-lr;
+    text-orientation: sideways;
+    padding-inline-start: 50px;
+    display: flex;
+    flex-direction: column;
+    line-height: 0.7em;
+    justify-content: center;
+    border: none;
+    border-radius: 1.7rem;
+    background-color: colors.$primary;
+    transition: flex 3s cubic-bezier(0, 1, 0, 1), background-color 0.5s, color 0.3s, border 0.5s;
+}
+
+.tasks {
+    display: flex;
+    flex-direction: row;
+    height: 100%;
+    align-items: center;
+    overflow-y: hidden;
+    overflow-x: scroll;
+    width: 100%;
+    gap: 3em;
+}
+
+.carousel p {
+    overflow: visible;
+}
+
+.carousel-item:nth-child(3n - 1) {
+    background-color: colors.$secondary;
+}
+
+.carousel-item:nth-child(3n) {
+    background-color: colors.$tertiary;
+}
+
+.carousel-item:hover {
+    flex: 10;
+    background-color: transparent;
+}
+
+.carousel:has(.carousel-item:hover) .carousel-item:not(:hover) {
+    color: transparent;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 30px;
+    width: 30px;
+    border-radius: 50%;
+    border: 2px solid colors.$primary;
+    background-color: white;
+    left: -5px;
+    bottom: -7px;
+    transition: 0.3s;
+}
+
+input:checked + .slider {
+    background-color: colors.$primary;
+}
+
+input:checked + .slider:before {
+    transform: translateX(50px);
+}
+
+.checkbox-container input {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+    cursor: pointer;
+}
+
+.checkbox-container {
+    position: relative;
+    user-select: none;
+    cursor: pointer;
+}
+
+.checkbox {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 30px;
+    width: 30px;
+    border-radius: 7px;
+    background-color: colors.$primary;
+    border: 3px solid colors.$primary;
+}
+
+.checkbox:after {
+    content: "";
+    width: 15px;
+    left: 7px;
+    top: 7px;
+    border-radius: 5px;
+    height: 15px;
+    background-color: rgba(white, 0.5);
+    position: absolute;
+    transition: 0.05s;
+}
+
+.checkbox-container input:checked ~ .checkbox:after {
+    width: 20px;
+    left: 1px;
+    top: 1px;
+    height: 20px;
+    background-color: white;
+}
+
+.textbox {
+    color: colors.$primary;
+    font-size: 32px;
+    background-color: transparent;
+    border-bottom: 3px solid colors.$primary;
+    transition: background-color 0.3s, outline 0.1s;
+    border-radius: 10px 10px 0px 0px;
+    padding: 5px;
+}
+
+.textbox:focus {
+    outline: none;
+    background-color: rgba(colors.$primary, 0.3);
+}
+
+.file:focus {
+    border: 3px solid colors.$primary;
+    border-radius: 15px;
+}
+
+.file {
+    color: rgba(colors.$primary, 0.5);
+    font-size: 32px;
+    border: 3px solid colors.$primary;
+    height: 100%;
+    width: 500px;
+    border-radius: 15px;
+    padding: 5px;
+    cursor: pointer;
+
+    //     color: colors.$primary;
+    // font-size: 32px;
+    // background-color: transparent;
+    // border-bottom: 3px solid colors.$primary;
+    // transition: background-color 0.3s, outline 0.1s;
+    // border-radius: 10px 10px 0px 0px;
+    // padding: 5px;
+}
+
+.dialog {
+    background-image: linear-gradient(to bottom, rgba(230, 209, 252, 0.99), rgba(185, 146, 255, 0.99));
+    width: 1000px;
+    height: 500px;
+    display: flex;
+    flex-direction: column;
+    justify-content: start;
+    gap: 50px;
+    align-items: center;
+    border-radius: 15px;
+    padding: 25px;
+    animation: dialog-animation 0.3s;
+}
+
+.dialog h2 {
+    font-size: 2em;
+}
+
+@keyframes dialog-animation {
+    from {
+        transform: scale(0.9);
+        opacity: 0;
+    }
+
+    70% {
+        opacity: 1;
+    }
+
+    to {
+        transform: scale(1.0);
+    }
+}
+
+.button {
+    background-color: colors.$primary;
+    border-radius: 15px;
+    color: white;
+    padding: 10px 20px;
+    font-size: 2rem;
+    user-select: none;
+    cursor: pointer;
+}
+
+.button:hover {
+    background-color: rgba(colors.$primary, 0.7);
+}
+
+.dialog-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+    z-index: 100;
+    position: fixed;
+}
+
+.hidden {
+    display: none;
+}
