@@ -25,6 +25,10 @@ def validate_hash(value: str, hash: str) -> bool:
     return PasswordHash.recommended().verify(value, hash)
 
 
+def generate_password():
+    pass
+
+
 def generate_uuid():
     return str(uuid.uuid4())
 

@@ -5,7 +5,8 @@ sqlalchemy
 sqlalchemy.orm
 sqlalchemy-utils
 dotenv
-psycopg2-binary
+psycopg[binary]
 pwdlib[argon2]
 pyjwt
 fleep
+random-password-generator

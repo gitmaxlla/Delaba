@@ -11,7 +11,7 @@ import { daysUntilDeadline } from "~/util"
 export default function TaskCard({task, num, toFocusId, editMode}: {task: Task, num: number, toFocusId: string | undefined, editMode: boolean}) {
     const { subjectColors, completed, pushCompleted, removeTask, popCompleted } = useGlobalStore() 
     const [ downloadProgress, setDownloadProgress ] = useState("0%")
-    const ref = useRef(null)
+    const ref = useRef<HTMLDivElement>(null)
     const [color, setColor] = useState(subjectColors.get(task.subject))    
     const [now, subject_tasks] = useState(new Date())
     const [deadline, setDeadline] = useState(new Date(task.deadline))
@@ -64,7 +64,7 @@ export default function TaskCard({task, num, toFocusId, editMode}: {task: Task, 
                         authClient("/tasks/" + task.id + "/file",
                             {responseType: 'blob', onDownloadProgress: (progressEvent: AxiosProgressEvent) => {
                                 if (progressEvent.lengthComputable) {
-                                    setDownloadProgress(`${Math.trunc((100*progressEvent.loaded) / progressEvent.total)}%`)
+                                    setDownloadProgress(`${Math.trunc((100*progressEvent.loaded) / progressEvent.total!)}%`)
                                 }
                             }}).then((response) => {
                             const blob = new Blob([response.data], {type: response.headers['content-type']})
