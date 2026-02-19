@@ -19,6 +19,8 @@ from ..services.news import add_news
 import time
 import datetime
 
+from ..database import db
+
 v1_router = APIRouter(prefix="/mock", tags=["mock"])
 
 
@@ -26,7 +28,7 @@ def mock_data():
     create_channel(ChannelRequest(channel="Университет 1 Группа 2"))
     create_channel(ChannelRequest(channel="Университет 2 Группа 3"))
 
-    mock_user_data = add_user("mock1", "Тестовый пользователь",
+    _ = add_user("mock1", "Тестовый пользователь",
                               "",
                               Permissions.VIEW_CHANNEL)
     test_user_data = add_user("mock", "Тестовый пользователь",
@@ -82,6 +84,14 @@ def mock_data():
     time.sleep(2)
     print(f"\t\t{test_user_data}")
 
+
+@v1_router.post("/sample", tags=["mock"])
+async def insert_mock_data():
+    mock_data()
+
+@v1_router.post("/drop", tags=["mock"])
+async def drop_database():
+    db.drop_all()
 
 @v1_router.post("/token", tags=["mock"])
 async def mock_token(response: Response):
