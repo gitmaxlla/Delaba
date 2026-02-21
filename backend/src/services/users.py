@@ -70,6 +70,9 @@ def mark_user_initialized(id):
 
 
 async def ban_user(id):
+    if id == 0: 
+        return
+    
     with db.Session() as session:
         user = session.get(UserSchema, id)
         user.permissions = permissions_to_db(

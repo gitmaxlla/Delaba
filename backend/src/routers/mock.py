@@ -95,29 +95,29 @@ async def drop_database():
 
 @v1_router.post("/token", tags=["mock"])
 async def mock_token(response: Response):
-    set_tokens(TokenPayload(1), response)
+    set_tokens(TokenPayload(0), response)
 
 
 @v1_router.post("/ban", tags=["mock"])
 async def mock_ban():
-    await ban_user(1)
+    await ban_user(0)
 
 
 @v1_router.post("/unban", tags=["mock"])
 async def mock_unban():
-    await unban_user(1)
+    await unban_user(0)
 
 
 @v1_router.post("/moderator", tags=["mock"])
 async def mock_moderator():
-    await make_moderator(1)
+    await make_moderator(0)
 
 
 @v1_router.post("/viewer", tags=["mock"])
 async def mock_viewer():
-    await make_default(1)
+    await make_default(0)
 
 
 @v1_router.post("/admin", tags=["mock"])
 async def mock_admin():
-    await make_admin(1)
+    await make_admin(0)

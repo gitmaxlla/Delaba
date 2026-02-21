@@ -7,7 +7,7 @@ import type { Route } from "./+types/index";
 import styles from "app/app.module.scss";
 import colors from "app/colors.module.scss";
 import { useNavigate } from "react-router";
-import { useState } from "react"; 
+import { useEffect, useState } from "react"; 
 import { useGlobalStore } from "app/store";
 import { redirect } from "react-router";
 
@@ -61,8 +61,12 @@ export default function Index() {
     setInitToken(event.target.value) 
   }
 
-  function logIn() {
+  const authenticate = () => {
     setErrorMsg("")
+    initMode ? initUser() : logIn()
+  }
+
+  function logIn() {
     baseClient.post("/auth/login", {
       login: login,
       password: password
@@ -85,7 +89,6 @@ export default function Index() {
   }
 
   function initUser() {
-    setErrorMsg("")
     if (newPassword == newPasswordCheck) {
       baseClient.post("/auth/init", {
         login: login,
@@ -105,6 +108,15 @@ export default function Index() {
       setErrorMsg("Пароли не совпадают")
     }
   }
+
+  useEffect(() => {
+    const authenticateOnEnter = (e: KeyboardEvent) => {
+      if (e.key == 'Enter') authenticate()
+    }
+
+    document.addEventListener('keydown', authenticateOnEnter)
+    return () => { document.removeEventListener('keydown', authenticateOnEnter) }
+  }, [])
 
   return (
       <GradientBackground color={colors.primary}>
@@ -131,18 +143,11 @@ export default function Index() {
               </>
               }
             </div>
-
               <div 
                 style={{position: "relative", width: "300px", height: "300px"}} title="Войти"
-                onClick={() => {
-                  setErrorMsg("")
-                  if(initMode) {
-                    initUser()
-                  } else {
-                    logIn()
-                  }
-                }}
+                onClick={authenticate}
               >
+                <input type="submit" hidden onSubmit={authenticate} />
                 <img className={styles['logo-main']} src="./logo.svg" />
                 <img className={styles['logo-hover']} src="./logo_filled.svg" />
               </div>
