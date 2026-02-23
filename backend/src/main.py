@@ -1,5 +1,6 @@
 from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
+from contextlib import asynccontextmanager
 
 from .routers import router
 from .database import db
@@ -13,18 +14,21 @@ from .schemas.tasks import Task
 from .schemas.channels import Channel
 
 
-News, User, Task, Channel
-db.create_all()
-create_admin_user()
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    News, User, Task, Channel
+    db.create_all()
+    create_admin_user()
+    
+    yield
 
-app = FastAPI()
-limiter = RateLimiter()
+app = FastAPI(lifespan=lifespan)
 
 
 @app.middleware("http")
 async def rate_limit(request: Request, call_next):
     request_address = request.client.host
-    retry_after = limiter.exceeded(request_address)
+    retry_after = RateLimiter().exceeded(request_address)
     if retry_after:
         return Response(status_code=429,
                         headers={"Retry-After": str(retry_after)})

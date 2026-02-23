@@ -5,6 +5,8 @@ import datetime
 from time import time
 from collections import defaultdict
 import os
+import secrets
+import string
 from dotenv import load_dotenv
 
 load_dotenv("../.env")
@@ -25,9 +27,9 @@ def validate_hash(value: str, hash: str) -> bool:
     return PasswordHash.recommended().verify(value, hash)
 
 
-def generate_password():
-    pass
-
+def generate_password(length = 16):
+    charset = string.ascii_letters + string.digits
+    return ''.join([secrets.choice(charset) for i in range(length)])
 
 def generate_uuid():
     return str(uuid.uuid4())
@@ -66,7 +68,15 @@ def get_refresh_payload(token: str) -> dict:
     return dict(jwt.decode(token, REFRESH_SIGNATURE, algorithms="HS256"))
 
 
-class RateLimiter:
+class Singleton(type):
+    _instances={}
+    def __call__(cls, *args, **kwargs):
+        if cls not in cls._instances:
+            cls._instances[cls] = super(Singleton, cls).__call__(*args, **kwargs)
+        return cls._instances[cls]
+
+
+class RateLimiter(metaclass=Singleton):
     def __init__(self, per_minute=300):
         self.requests_counter = defaultdict(int)
         self.requests_started = defaultdict(datetime.datetime.now)

@@ -91,7 +91,6 @@ dependencies = [
     { name = "pwdlib", extra = ["argon2"] },
     { name = "pydantic" },
     { name = "pyjwt" },
-    { name = "random-password-generator" },
     { name = "sqlalchemy" },
     { name = "sqlalchemy-orm" },
     { name = "sqlalchemy-utils" },
@@ -107,7 +106,6 @@ requires-dist = [
     { name = "pwdlib", extras = ["argon2"], specifier = ">=0.3.0" },
     { name = "pydantic", specifier = ">=2.12.5" },
     { name = "pyjwt", specifier = ">=2.11.0" },
-    { name = "random-password-generator", specifier = ">=2.2.0" },
     { name = "sqlalchemy", specifier = ">=2.0.46" },
     { name = "sqlalchemy-orm", specifier = ">=1.2.10" },
     { name = "sqlalchemy-utils", specifier = ">=0.42.1" },
@@ -798,15 +796,6 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/da/92/1446574745d74df0c92e6aa4a7b0b3130706a4142b2d1a5869f2eaa423c6/pyyaml-6.0.3-cp314-cp314t-musllinux_1_2_x86_64.whl", hash = "sha256:16249ee61e95f858e83976573de0f5b2893b3677ba71c9dd36b9cf8be9ac6d65", size = 829923, upload-time = "2025-09-25T21:32:54.537Z" },
     { url = "https://files.pythonhosted.org/packages/f0/7a/1c7270340330e575b92f397352af856a8c06f230aa3e76f86b39d01b416a/pyyaml-6.0.3-cp314-cp314t-win_amd64.whl", hash = "sha256:4ad1906908f2f5ae4e5a8ddfce73c320c2a1429ec52eafd27138b7f1cbe341c9", size = 174062, upload-time = "2025-09-25T21:32:55.767Z" },
     { url = "https://files.pythonhosted.org/packages/f1/12/de94a39c2ef588c7e6455cfbe7343d3b2dc9d6b6b2f40c4c6565744c873d/pyyaml-6.0.3-cp314-cp314t-win_arm64.whl", hash = "sha256:ebc55a14a21cb14062aa4162f906cd962b28e2e9ea38f9b4391244cd8de4ae0b", size = 149341, upload-time = "2025-09-25T21:32:56.828Z" },
-]
-
-[[package]]
-name = "random-password-generator"
-version = "2.2.0"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/d6/ae/cef95522c149cdedbcccb2f3c9b16e72d56c8445268e88cd6ce1c648f5cb/random-password-generator-2.2.0.tar.gz", hash = "sha256:d8a8e2c0420fdd2c096bc7948f62701cb36761aea42e59c9a504d02f0e359d43", size = 4361, upload-time = "2021-07-12T07:33:15.636Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/15/f7/7dc48013751fd4e8b3ea034bd4f80028a157e0992e6b6a1b2d47423744c3/random_password_generator-2.2.0-py3-none-any.whl", hash = "sha256:da9ce21a9b6a99dfda940596fe417a55470a2e0343fae56dea785f431780d8a9", size = 4773, upload-time = "2021-07-12T07:33:13.877Z" },
 ]
 
 [[package]]
