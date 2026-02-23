@@ -1,0 +1,20 @@
+[project]
+name = "backend"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "dotenv>=0.9.9",
+    "fastapi[standard]>=0.131.0",
+    "fleep>=1.0.1",
+    "psycopg[binary]>=3.3.3",
+    "pwdlib[argon2]>=0.3.0",
+    "pydantic>=2.12.5",
+    "pyjwt>=2.11.0",
+    "random-password-generator>=2.2.0",
+    "sqlalchemy>=2.0.46",
+    "sqlalchemy-orm>=1.2.10",
+    "sqlalchemy-utils>=0.42.1",
+    "uvicorn>=0.41.0",
+]
