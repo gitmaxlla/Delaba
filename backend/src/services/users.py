@@ -5,9 +5,8 @@ from ..database import db
 from ..schemas.users import User as UserSchema, \
     Permissions, user_from_schema
 
-from ..core.security import generate_uuid, hash as pwdlib_hash, generate_password
+from ..core.security import hash as pwdlib_hash, generate_password
 from ..models.users import User as UserModel, UserCreationResponse
-from ..internal.root import ADMIN_INIT_TOKEN
 
 from ..services.channels import create_channel
 from ..schemas.channels import Channel
@@ -131,7 +130,7 @@ def permissions_to_db(permissions: int) -> str:
 
 def add_user(login: str, role: str,
              channel: str, permissions: Permissions) -> UserCreationResponse:
-    init_token = generate_uuid()
+    init_token = generate_password()
 
     user = UserSchema(
                 login=login,
@@ -174,7 +173,7 @@ def get_user(id: int) -> UserModel:
 
 
 def create_admin_user():
-    auto_password = generate_password()
+    random_password = generate_password()
     create_channel(ChannelRequest(channel=""))
     user = UserSchema(
                 id=0,
@@ -185,20 +184,18 @@ def create_admin_user():
                     | Permissions.MANAGE_CHANNEL
                     | Permissions.VIEW_CHANNEL
                 ),
-                password_hashed=pwdlib_hash(auto_password),
+                password_hashed=pwdlib_hash(random_password),
                 channel="")
 
     with db.Session() as session:
-        session.merge(Channel(name=""))
-        session.commit()
-
-    with db.Session() as session:
-        session.merge(user) 
-        session.commit()
-
-    print("\n\033[33mRoot login --> admin")
-    print(f"Root password --> {auto_password}")
-    print("(Pass to sysadmin to enter in the web interface to finish initialization)\033[0m\n")
+        admin = session.get(UserSchema, 0)
+        if not admin:
+            session.merge(user) 
+            session.commit()
+            
+            print("\n\033[33mRoot login --> admin")
+            print(f"Root password --> {random_password}")
+            print("(Pass to sysadmin to enter in the web interface to finish initialization)\033[0m\n")
 
 
 def get_by_channel(channel: str) -> List[UserModel]:
