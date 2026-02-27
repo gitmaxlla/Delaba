@@ -43,6 +43,7 @@ export default function Subject() {
   const [minID, setMinID] = useState(-1)
   const [tasks, setTasks] = useState<Task[]>([])
   
+
   useEffect(() => {
     const availableTasks = allTasks.get(name!)
     if (availableTasks !== undefined) {
@@ -55,7 +56,7 @@ export default function Subject() {
         setMinID(tasks[i].id)
       }
     }
-  }, [tasks, name])
+  }, [allTasks, name])
 
   useEffect(() => {
     if (localStorage.getItem("enable_edit") == "true") {
@@ -82,7 +83,7 @@ export default function Subject() {
             </div>
             <div className={styles.tasks}>
               {Object.entries(tasks).map(([num, task]) => (
-                  <TaskCard key={task.id} editMode={editMode} toFocusId={focusId} task={task} num={num+1}/>
+                  <TaskCard key={task.id} editMode={editMode} toFocusId={focusId} task={task} num={parseInt(num)+1}/> // TODO: why's num string?
               ))}
               
               <div onClick={() => {setShowCreationDialog(true)}} className={styles["card-subject-compact"]} style={{display: editMode ? "flex" : "none", backgroundColor: "transparent", border: "5px dashed black"}}>

@@ -68,12 +68,13 @@ def delete_task(id: int):
         session.delete(task)
         session.commit()
 
-    with db.Session() as session:
-        file_used = session.query(TaskSchema) \
-                      .filter(TaskSchema.fileHash == hadFileHash).first()
+    if hadFileHash:
+        with db.Session() as session:
+            file_used = session.query(TaskSchema) \
+                            .filter(TaskSchema.fileHash == hadFileHash).first()
 
-        if not file_used:
-            os.remove(f"./uploads/{hadFileHash}")
+            if not file_used:
+                os.remove(f"./uploads/{hadFileHash}")
 
 
 def change_task_deadline(id, deadline: datetime.datetime):

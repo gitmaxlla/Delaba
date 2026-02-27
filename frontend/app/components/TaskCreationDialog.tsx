@@ -105,7 +105,6 @@ export default function TaskCreationDialog(
                       const newTaskId = response.data
 
                       authClient.get("/tasks/"+newTaskId).then((response) => {
-                        console.log(response)
                         addTask(response.data as Task)
                       })
 
