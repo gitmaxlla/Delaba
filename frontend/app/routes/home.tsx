@@ -10,6 +10,7 @@ import { useNavigate } from "react-router";
 import { formatDate } from "~/util";
 import { redirect } from "react-router";
 import { daysUntilDeadline, inflectDayWord } from "~/util";
+import TaskCreationDialog from "~/components/TaskCreationDialog";
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -29,9 +30,17 @@ export async function clientLoader({
 export default function Home() {
   const { authorized, news, tasks, subjectColors } = useGlobalStore()
   const navigate = useNavigate()
-
+  
   const [hovering, setHovering] = useState("Не выбрано")
   const [info, setInfo] = useState<string[]>([])
+  const [showCreationDialog, setShowCreationDialog] = useState(false)
+  
+  const [subjects, setSubjects] = useState<string[]>([])
+  useEffect(() => {
+    setSubjects(
+      Array.from(tasks.keys())
+    )
+  }, [tasks])
 
   useEffect(() => {
     if (!authorized) {
@@ -65,45 +74,53 @@ export default function Home() {
     }
   }, [hovering])
 
-  return <GradientBackground color={colors.primary}>
-    <div style={{width: "100%", height: "100%", display: "flex", justifyContent: "space-between", alignItems: "center"}}>
-      <ActionBar showReturn={false} routeTo="/" />
-      
-      <Carousel subjects={Array.from(tasks.keys())}
-        onHover={(subject) => {setHovering(subject)}} 
-        onHoverEnd={(subject) => {setHovering("Не выбрано")}}
-        onSelected={(subject) => {navigate("/subject/" + subject)}} />
+  return (
+    <GradientBackground color={colors.primary}>
+      <TaskCreationDialog subject="" hidden={!showCreationDialog} setHidden={setShowCreationDialog} />
 
-      <div className={styles["vertical-apart"]}>
-        <div className={styles["news-container"]}>
-          <div>
-            <h3>Новости</h3>
-            <hr/>
-          </div>
-          <div style={{overflowY: "scroll", height: "100%", padding: "10px 0px"}}>
-              {news.map((news) => (
-                <div key={news.id} style={{marginBottom: "20px", marginRight: "10px", marginLeft: "10px"}}>
-                  <div style={{display: "flex", flexDirection: "row", justifyContent: "space-between", fontSize: "0.8em", alignItems: "center"}}>
-                    <div>{news.by}</div>
-                    <div>{formatDate(news.postedAt)}</div>
+      <div style={{width: "100%", height: "100%", display: "flex", justifyContent: "space-between", alignItems: "center"}}>
+        <ActionBar showReturn={false} routeTo="/" />
+        
+        <Carousel subjects={subjects}
+          onHover={(subject) => {setHovering(subject)}} 
+          onHoverEnd={(subject) => {setHovering("Не выбрано")}}
+          onSelected={(subject) => {navigate("/subject/" + subject)}} 
+          onCreate={() => {setShowCreationDialog(true)}} 
+        />
+
+        <div className={styles["vertical-apart"]}>
+          <div className={styles["news-container"]}>
+            <div>
+              <h3>Новости</h3>
+              <hr/>
+            </div>
+            <div style={{overflowY: "scroll", height: "100%", padding: "10px 0px"}}>
+                {news.map((news) => (
+                  <div key={news.id} style={{marginBottom: "20px", marginRight: "10px", marginLeft: "10px"}}>
+                    <div style={{display: "flex", flexDirection: "row", justifyContent: "space-between", fontSize: "0.8em", alignItems: "center"}}>
+                      <div>{news.by}</div>
+                      <div>{formatDate(news.postedAt)}</div>
+                    </div>
+                    <div style={{fontWeight: "bolder"}}>{news.section}: {news.title}</div>
+                    <p style={{padding: "0px 15px", fontSize: "0.8em"}}>{news.message}</p>
                   </div>
-                  <div style={{fontWeight: "bolder"}}>{news.section}: {news.title}</div>
-                  <p style={{padding: "0px 15px", fontSize: "0.8em"}}>{news.message}</p>
-                </div>
+                ))}
+            </div>
+          </div>
+
+          <div style={{backgroundColor: subjectColors.get(hovering), opacity: hovering == "Не выбрано" ? 0.0: 1.0}} className={styles["subject-hovered-container"]}>
+            <div>
+              <h3>{hovering}</h3>
+              <hr/>
+            </div>
+              {info.map((line) => (
+                <p style={{opacity: hovering == "Не выбрано" ? 0.0 : 1.0}} key={line}>
+                  {line}
+                </p>
               ))}
           </div>
         </div>
-
-        <div style={{backgroundColor: subjectColors.get(hovering), opacity: hovering == "Не выбрано" ? 0.0: 1.0}} className={styles["subject-hovered-container"]}>
-          <div>
-            <h3>{hovering}</h3>
-            <hr/>
-          </div>
-            {info.map((line) => (
-              <p className={styles['hover-info']} style={{opacity: hovering == "Не выбрано" ? 0.0 : 1.0}} key={line}>{line}</p>
-            ))}
-        </div>
       </div>
-    </div>
-  </GradientBackground>;
+    </GradientBackground>
+  )
 }

@@ -5,7 +5,8 @@ export default [
     route("/home", "routes/home.tsx"),
     route("/subject/:name/:focusId?", "routes/subject.tsx"),
     route("/settings", "routes/settings.tsx"),
-    
+    route("/manage", "routes/manage.tsx")
+
     // route("/plan", "routes/plan.tsx"),
     // route("/news", "routes/news.tsx"),
     // route("/card", "routes/card.tsx"),

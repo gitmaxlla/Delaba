@@ -43,6 +43,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
       authClient.get("/users/permissions").then((response) => {
         if(Number(response.data) >= 6) {
           enableModeratorOptions()
+        } else {
+          localStorage.setItem("enable_edit", "false")
         }
       })
 

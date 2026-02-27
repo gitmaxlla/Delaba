@@ -1,33 +1,34 @@
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
-} from "@/components/ui/carousel"
 import type { Route } from "./+types/home"
+import Layout from "antd/es/layout/layout"
+import Sider from "antd/es/layout/Sider"
+import GradientBackground from "~/components/GradientBackground"
+import { useGlobalStore } from "~/store"
+import { authClient } from "~/store"
+
+import colors from "app/colors.module.scss"
 
 export function meta({}: Route.MetaArgs) {
   return [
-    { title: "New React Router App" },
-    { name: "description", content: "Welcome to React Router!" },
+    { title: "Management Panel" },
+    { name: "description", content: "App Management Panel" },
   ]
+}
+
+export async function clientLoader({
+  params,
+}: Route.ClientLoaderArgs) {
+  const response = await authClient.get("/users/permissions")
+  if(Number(response.data) < 6) {
+    throw new Response("", {status: 404})
+  }
 }
 
 export default function Home() {
   return (
-    <Carousel className="w-full max-w-[12rem] sm:max-w-xs">
-      <CarouselContent>
-        {Array.from({ length: 5 }).map((_, index) => (
-          <CarouselItem key={index}>
-            <div className="p-1">
-              102030
-            </div>
-          </CarouselItem>
-        ))}
-      </CarouselContent>
-      <CarouselPrevious />
-      <CarouselNext />
-    </Carousel>
+    <Layout>
+      <Sider>
+
+      </Sider>
+    </Layout>
   )
 }

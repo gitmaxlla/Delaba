@@ -190,13 +190,13 @@ def create_admin_user():
     with db.Session() as session:
         admin = session.get(UserSchema, 0)
         if not admin:
-            session.merge(user) 
-            session.commit()
+            session.merge(user)
             
             print("\n\033[33mRoot login --> admin")
             print(f"Root password --> {random_password}")
             print("(Pass to sysadmin to enter in the web interface to finish initialization)\033[0m\n")
 
+        session.commit()
 
 def get_by_channel(channel: str) -> List[UserModel]:
     users = []

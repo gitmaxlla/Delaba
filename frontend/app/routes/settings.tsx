@@ -10,7 +10,7 @@ import { ItemIconType } from "~/components/ItemIcon"
 import ListSeparator from "~/components/ListSeparator";
 import { useGlobalStore } from "~/store";
 
-import { redirect, useNavigate } from "react-router";
+import { Navigate, redirect, useNavigate } from "react-router";
 import { authClient } from "~/store";
 import { useEffect, useState } from "react";
 
@@ -65,7 +65,7 @@ export default function Index() {
                   }} className={styles['settings-button']}>Удалить данные использования</p>
                   {moderator ? 
                   <div style={{display: "flex", justifyContent: "space-between", alignItems: "center"}}>
-                    <p style={{color: colors.primary, fontSize: "30px", fontWeight: "bold"}}>Включить редактирование</p>
+                    <p style={{color: colors.primary, fontSize: "30px", fontWeight: "bold"}}>Включить визуальное редактирование</p>
                     <Switch checked={enableEdit} onChange={(value) => {setEnableEdit(value)}} />
                   </div>
                   : <></>}
@@ -90,13 +90,18 @@ export default function Index() {
             <div style={{display: "flex", flexDirection: "column", height: "100%", justifyContent: "space-between"}}>
               <div style={{display: "flex", height: "100%", justifyContent: "start", gap: "15px", flexDirection: "column"}}>
                   <ListItem title="Основные" highlight={false} icon={ItemIconType.None} />
+                  {moderator? 
+                    <div onClick={() => {navigate("/manage")}}>
+                      <ListItem title="Управление" highlight={true} icon={ItemIconType.None} />
+                    </div>
+                   : <></>}
                   <ListSeparator />
                   <div onClick={() => {
                     authClient.post("/auth/logout")
                     unauthorize()
                     navigate("/")
                   }}>
-                    <ListItem title="Выйти" highlight={true} icon={ItemIconType.None} />
+                    <ListItem title="Выйти из аккаунта" highlight={true} icon={ItemIconType.None} />
                   </div>
               </div>
 

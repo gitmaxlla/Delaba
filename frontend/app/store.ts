@@ -67,13 +67,23 @@ export const useGlobalStore = create<GlobalStore>((set) => ({
     removeTask: (taskId: number) => set((state) => {
         const newTasks = new Map(state.tasks)
         for(const subject of newTasks) {
-            newTasks.set(subject[0], newTasks.get(subject[0]).filter((task) => task.id != taskId))
-        }   
+            const result = newTasks.get(subject[0])!.filter((task) => task.id != taskId)
+            if (result?.length == 0) {
+                newTasks.delete(subject[0])
+            } else {
+                newTasks.set(subject[0], result)
+            }
+        }
         return {tasks: newTasks}
     }),
     addTask: (task: Task) => set((state) => {
         const newTasks = new Map(state.tasks)
-        const taskSubjectTasks = newTasks.get(task.subject)
+        let taskSubjectTasks = newTasks.get(task.subject)
+
+        if (taskSubjectTasks === undefined) {
+            taskSubjectTasks = []
+        }
+
         const newSubjectTasks = [...taskSubjectTasks, task]
 
         sortByDeadline(newSubjectTasks)
