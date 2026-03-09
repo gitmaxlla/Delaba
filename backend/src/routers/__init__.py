@@ -16,7 +16,7 @@ v1.include_router(news.v1_router)
 v1.include_router(auth.v1_router)
 v1.include_router(channels.v1_router)
 
-if os.getenv("ENABLE_MOCKING"):
+if os.getenv("DEV"):
     v1.include_router(mock.v1_router)
 
 

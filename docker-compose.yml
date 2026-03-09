@@ -1,26 +1,69 @@
 services:
+  ai-firewall:
+    image: ghcr.io/techarohq/anubis:latest
+    environment:
+      - BIND=:5000
+      - DIFFICULTY=5
+      - SERVE_ROBOTS_TXT=true
+      - TARGET=http://frontend:5173
+      - OG_PASSTHROUGH=true
+      - OG_EXPIRY_TIME=24h
+    healthcheck:
+      test: ["CMD", "anubis", "--healthcheck"]
+      interval: 5s
+      timeout: 30s
+      retries: 5
+      start_period: 1s
+  reverse-proxy: # TODO: many logs for some reason
+    image: caddy:alpine
+    restart: unless-stopped
+    cap_add:
+      - NET_ADMIN
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    depends_on:
+      ai-firewall:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-t", "1", "--spider", "--no-verbose", "http://localhost" ]
+      interval: 1s
+      timeout: 30s
+      retries: 5
+      start_period: 2s
+    volumes:
+      - caddy_config:/config
+      - ./conf:/etc/caddy
+      - caddy_data:/data
+
   frontend:
-    build: ./frontend
-    ports: 
-    - "5173:80"
+    build: 
+      context: ./frontend
+      target: PRODUCTION
 
   backend:
-    build: ./backend
-    ports:
-     - "8000:8000"
+    build: 
+      context: ./backend
+      target: PRODUCTION
     env_file:
       - .env
     environment:
-      - POSTGRES_ADDRESS=delaba-db
-      - SQLALCHEMY_ECHO=false
+      - BUILD_TARGET=PRODUCTION
     depends_on:
-      db:
+      object-storage:
+        condition: service_healthy
+        # TODO: what's this for?
+        restart: true
+      relational-db:
+        condition: service_healthy
+        restart: true
+      reverse-proxy:
         condition: service_healthy
         restart: true
 
-  db:
+  relational-db:
     image: postgres:17
-    container_name: delaba-db
     volumes:
       - postgres_data:/var/lib/postgresql/data
     env_file:
@@ -31,6 +74,37 @@ services:
       retries: 5
       start_period: 5s
       timeout: 3s
-  
+
+  object-storage:
+    image: minio/minio
+    env_file:
+      - .env
+    volumes:
+      - minio_data:/data
+    command: ["server", "--console-address", ":9001", "/data"]
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 2s
+      retries: 5
+      start_period: 10s
+      timeout: 3s
+
+  bucket-creator:
+    image: minio/mc
+    restart: on-failure
+    depends_on:
+      object-storage:
+        condition: service_healthy
+    entrypoint: >
+      sh -c "
+      echo ${MINIO_ROOT_USER} ${MINIO_ROOT_PASSWORD} ${MINIO_DEFAULT_BUCKET};
+      mc alias set bucket-creator http://object-storage:9000 ${MINIO_ROOT_USER} ${MINIO_ROOT_PASSWORD};
+      mc mb bucket-creator/${MINIO_DEFAULT_BUCKET};
+      exit 0;
+      "
+
 volumes:
   postgres_data:
+  caddy_config:
+  minio_data:
+  caddy_data:

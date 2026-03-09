@@ -1,11 +1,21 @@
-FROM node:20-alpine as static-build
+FROM oven/bun:1 as DEVELOPMENT
 
 WORKDIR /frontend
 
 COPY ./ ./
-RUN npm install
-RUN npm run build
+RUN bun install --frozen-lockfile
+CMD [ "bun", "run", "dev", "--", "--host", "0.0.0.0" ]
+
+
+FROM oven/bun:1 as PRODUCTION
+
+WORKDIR /frontend
+
+COPY ./ ./
+RUN bun install --frozen-lockfile --production
+RUN bun run test
+RUN bun run build
 
 FROM nginx
 COPY nginx.conf /etc/nginx/nginx.conf
-COPY --from=static-build /frontend/build/client /usr/share/nginx/html
+COPY --from=PRODUCTION /frontend/build/client /usr/share/nginx/html

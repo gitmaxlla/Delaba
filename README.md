@@ -10,15 +10,17 @@
 
 ## Как запустить?
 ### 1. Настройте файл окружения
-Добавьте файл ``.env`` в корне проекта, например такой:
+Добавьте файл ``.env`` внутри ``backend``, например такой:
 ```yaml
 POSTGRES_PASSWORD=admin
 POSTGRES_USER=admin
 POSTGRES_DB=delaba
 
-POSTGRES_ADDRESS=localhost # Адрес базы данных для локальной разработки
+POSTGRES_ADDRESS=db
 POSTGRES_PORT=5432
-SQLALCHEMY_ECHO=true # Выводить ли SQLAlchemy данные для отладки (отключено на продакшене)
+
+# Выводить ли SQLAlchemy данные для отладки
+SQLALCHEMY_ECHO=true
 
 # Сгенерируйте и вставьте вместо угловых скобок свои токены (JWT Secret)
 JWT_ACCESS_SECRET=<access-token>

@@ -6,7 +6,7 @@ import { useState } from "react";
 export default function OnboardingPager() {
     const [page, setPage] = useState(0)
     const pages: {[key: number]: React.ReactElement} = {
-        0: <>Где лаба?<br />- Делаба</>,
+        0: <>Где лаба<br />- Делаба</>,
         1: <>Все учебные задания в одном месте</>,
         2: <>Планируй учёбу эффективно!</>
     }

@@ -1,0 +1,6 @@
+:80 {
+    reverse_proxy ai-firewall:5000 {
+        header_up X-Real-IP {http.request.remote.host}
+		header_up X-Http-Version {http.request.proto}
+    }
+}

@@ -6,7 +6,7 @@ import type { Task, News } from './types'
 import colors from "app/colors.module.scss"
 import { sortByDeadline } from './util'
 
-const server: string = "http://localhost:8000/v1"
+const server: string = "http://127.0.0.1:8000/v1"
 
 export const baseClient = axios.create({
     baseURL: server,

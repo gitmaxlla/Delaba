@@ -13,6 +13,7 @@ from .schemas.users import User
 from .schemas.tasks import Task
 from .schemas.channels import Channel
 
+from .core.config import DEV_MODE, ALLOWED_HOSTNAME
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -38,7 +39,7 @@ async def rate_limit(request: Request, call_next):
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],
+    allow_origins=["http://127.0.0.1" if DEV_MODE else ALLOWED_HOSTNAME],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"]

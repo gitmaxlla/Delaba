@@ -1,10 +1,31 @@
-FROM python:3.14-slim-trixie
+FROM python:3.14-slim-trixie as DEVELOPMENT
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
-WORKDIR /app
+WORKDIR /backend
+COPY ./pyproject.toml .
+COPY ./uv.lock .
 
-COPY ./requirements.txt .
-RUN pip install --no-cache-dir --upgrade -r /app/requirements.txt
+RUN uv sync --locked
+RUN uv tool install uvicorn
 
-COPY src .
+COPY src ./src
+COPY run.py .
 
-CMD ["fastapi", "run", "main.py", "--port", "8000"]
+CMD ["uv", "run", "run.py"]
+
+
+FROM python:3.14-slim-trixie as PRODUCTION
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
+
+WORKDIR /backend
+COPY ./pyproject.toml .
+COPY ./uv.lock .
+
+ENV UV_NO_DEV=1
+RUN uv sync --locked
+RUN uv tool install uvicorn
+
+COPY src ./src
+COPY run.py .
+
+CMD ["uv", "run", "run.py"]

@@ -4,20 +4,15 @@ import uuid
 import datetime
 from time import time
 from collections import defaultdict
-import os
+from .config import ACCESS_SIGNATURE, REFRESH_SIGNATURE
 import secrets
 import string
-from dotenv import load_dotenv
 from .base import Singleton
 
-load_dotenv("../.env")
 
 DAY_SECS = 60 * 60 * 24
 REFRESH_TOKEN_EXPIRES_TIME_SEC = DAY_SECS * 20
 ACCESS_TOKEN_EXPIRES_TIME_SEC = 60
-
-REFRESH_SIGNATURE = os.getenv("JWT_REFRESH_SECRET")
-ACCESS_SIGNATURE = os.getenv("JWT_ACCESS_SECRET")
 
 
 def hash(value: str):
@@ -31,6 +26,7 @@ def validate_hash(value: str, hash: str) -> bool:
 def generate_password(length = 16):
     charset = string.ascii_letters + string.digits
     return ''.join([secrets.choice(charset) for i in range(length)])
+
 
 def generate_uuid():
     return str(uuid.uuid4())
