@@ -8,12 +8,16 @@ services:
       - TARGET=http://frontend:5173
       - OG_PASSTHROUGH=true
       - OG_EXPIRY_TIME=24h
+    depends_on:
+      frontend:
+        condition: service_healthy
     healthcheck:
       test: ["CMD", "anubis", "--healthcheck"]
       interval: 5s
       timeout: 30s
       retries: 5
       start_period: 1s
+
   reverse-proxy: # TODO: many logs for some reason
     image: caddy:alpine
     restart: unless-stopped
@@ -27,8 +31,8 @@ services:
       ai-firewall:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "wget", "-t", "1", "--spider", "--no-verbose", "http://localhost" ]
-      interval: 1s
+      test: ["CMD", "wget", "-t", "1", "--spider", "--no-verbose", "http://localhost:8000" ]
+      interval: 5s
       timeout: 30s
       retries: 5
       start_period: 2s
@@ -41,6 +45,12 @@ services:
     build: 
       context: ./frontend
       target: PRODUCTION
+    healthcheck:
+      test: ["CMD", "bun", "-e", "fetch('http://localhost:5173').then(r => process.exit(r.ok ? 0 : 1))"]
+      interval: 10s
+      timeout: 30s
+      retries: 5
+      start_period: 10s
 
   backend:
     build: 
@@ -50,17 +60,17 @@ services:
       - .env
     environment:
       - BUILD_TARGET=PRODUCTION
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000"]
+      interval: 10s
+      timeout: 30s
+      retries: 5
+      start_period: 1s
     depends_on:
       object-storage:
         condition: service_healthy
-        # TODO: what's this for?
-        restart: true
       relational-db:
         condition: service_healthy
-        restart: true
-      reverse-proxy:
-        condition: service_healthy
-        restart: true
 
   relational-db:
     image: postgres:17

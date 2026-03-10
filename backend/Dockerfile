@@ -11,6 +11,9 @@ RUN uv tool install uvicorn
 COPY src ./src
 COPY run.py .
 
+RUN apt-get update && apt-get install -y curl \
+    && rm -rf /var/lib/apt/lists/*
+
 CMD ["uv", "run", "run.py"]
 
 
@@ -27,5 +30,8 @@ RUN uv tool install uvicorn
 
 COPY src ./src
 COPY run.py .
+
+RUN apt-get update && apt-get install -y curl \
+    && rm -rf /var/lib/apt/lists/*
 
 CMD ["uv", "run", "run.py"]

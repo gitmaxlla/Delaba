@@ -13,7 +13,8 @@ from .schemas.users import User
 from .schemas.tasks import Task
 from .schemas.channels import Channel
 
-from .core.config import DEV_MODE, ALLOWED_HOSTNAME
+from .core.config import DEV_MODE, ALLOWED_HOSTNAME, LogFilter
+import logging
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -24,7 +25,7 @@ async def lifespan(app: FastAPI):
     yield
 
 app = FastAPI(lifespan=lifespan)
-
+logging.getLogger("uvicorn.access").addFilter(LogFilter())
 
 @app.middleware("http")
 async def rate_limit(request: Request, call_next):

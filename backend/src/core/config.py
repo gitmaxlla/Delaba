@@ -1,4 +1,5 @@
 import os
+import logging
 
 DATABASE_NAME = os.getenv("POSTGRES_DB")
 DATABASE_USER = os.getenv("POSTGRES_USER")
@@ -18,3 +19,12 @@ ALLOWED_HOSTNAME = os.getenv("ALLOWED_HOSTNAME")
 
 REFRESH_SIGNATURE = os.getenv("JWT_REFRESH_SECRET")
 ACCESS_SIGNATURE = os.getenv("JWT_ACCESS_SECRET")
+
+ACCESS_LOG_EXCLUDE = ["/"]
+
+class LogFilter(logging.Filter):
+    def filter(self, record):
+        if record.args and len(record.args) >= 3:
+            if record.args[2] in ACCESS_LOG_EXCLUDE:
+                return False
+        return True

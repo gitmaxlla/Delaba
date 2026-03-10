@@ -1,3 +1,10 @@
+:8000 {
+    respond "OK" 200
+    log {
+        output discard
+    }
+}
+
 :80 {
     reverse_proxy ai-firewall:5000 {
         header_up X-Real-IP {http.request.remote.host}
