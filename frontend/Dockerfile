@@ -1,4 +1,4 @@
-FROM oven/bun:1 as DEVELOPMENT
+FROM oven/bun:1 AS development
 
 WORKDIR /frontend
 
@@ -7,7 +7,7 @@ RUN bun install --frozen-lockfile
 CMD [ "bun", "run", "dev", "--", "--host", "0.0.0.0" ]
 
 
-FROM oven/bun:1 as PRODUCTION
+FROM oven/bun:1 AS production
 
 WORKDIR /frontend
 

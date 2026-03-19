@@ -5,7 +5,7 @@ services:
         source: ./backend/src/
         target: /backend/src/
     build:
-      target: DEVELOPMENT
+      target: development
     environment:
       - DEV_MODE=1
     ports:
@@ -19,9 +19,14 @@ services:
     ports:
       - "5173:5173"
     build:
-      target: DEVELOPMENT
+      target: development
+
+  mail-server:
+    ports:
+      - "8025:8025"
+      - "1025:1025"
 
   object-storage:
     ports:
-      - "9000:9000"
-      - "9001:9001"
+      - "9900:9000"
+      - "9901:9001"

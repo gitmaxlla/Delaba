@@ -1,5 +1,6 @@
 services:
   ai-firewall:
+    restart: unless-stopped
     image: ghcr.io/techarohq/anubis:latest
     environment:
       - BIND=:5000
@@ -42,9 +43,10 @@ services:
       - caddy_data:/data
 
   frontend:
-    build: 
+    restart: unless-stopped
+    build:
       context: ./frontend
-      target: PRODUCTION
+      target: production
     healthcheck:
       test: ["CMD", "bun", "-e", "fetch('http://localhost:5173').then(r => process.exit(r.ok ? 0 : 1))"]
       interval: 10s
@@ -53,13 +55,12 @@ services:
       start_period: 10s
 
   backend:
-    build: 
+    restart: unless-stopped
+    build:
       context: ./backend
-      target: PRODUCTION
+      target: production
     env_file:
       - .env
-    environment:
-      - BUILD_TARGET=PRODUCTION
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000"]
       interval: 10s
@@ -74,6 +75,7 @@ services:
 
   relational-db:
     image: postgres:17
+    restart: always
     volumes:
       - postgres_data:/var/lib/postgresql/data
     env_file:
@@ -87,6 +89,7 @@ services:
 
   object-storage:
     image: minio/minio
+    restart: always
     env_file:
       - .env
     volumes:
@@ -112,6 +115,10 @@ services:
       mc mb bucket-creator/${MINIO_DEFAULT_BUCKET};
       exit 0;
       "
+
+  mail-server:
+    image: axllent/mailpit
+    restart: always
 
 volumes:
   postgres_data:

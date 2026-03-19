@@ -1,4 +1,4 @@
-FROM python:3.14-slim-trixie as DEVELOPMENT
+FROM python:3.14-slim-trixie AS development
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
 WORKDIR /backend
@@ -17,7 +17,7 @@ RUN apt-get update && apt-get install -y curl \
 CMD ["uv", "run", "run.py"]
 
 
-FROM python:3.14-slim-trixie as PRODUCTION
+FROM python:3.14-slim-trixie AS production
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
 WORKDIR /backend
