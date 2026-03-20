@@ -11,6 +11,7 @@
     "typecheck": "react-router typegen && tsc"
   },
   "dependencies": {
+    "@ant-design/icons": "6.x",
     "@react-router/node": "^7.9.2",
     "@react-router/serve": "^7.9.2",
     "@tanstack/react-query": "^5.90.12",

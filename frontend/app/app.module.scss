@@ -88,6 +88,8 @@ h2 {
     background-color: colors.$primary;
     transition: background-color 0.3s;
     color: white;
+    user-select: none;
+    transition: backdrop-fiter 0.2s;
 }
 
 .list-item:hover {

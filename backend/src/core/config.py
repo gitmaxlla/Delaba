@@ -20,10 +20,16 @@ ALLOWED_HOSTNAME = os.getenv("ALLOWED_HOSTNAME")
 REFRESH_SIGNATURE = os.getenv("JWT_REFRESH_SECRET")
 ACCESS_SIGNATURE = os.getenv("JWT_ACCESS_SECRET")
 
-ACCESS_LOG_EXCLUDE = ["/"]
+ADMIN_MAIL = os.getenv("ADMIN_MAIL")
+DELABA_MAIL = os.getenv("DELABA_MAIL")
+
+SMTP_HOSTNAME = os.getenv("SMTP_HOSTNAME")
+SMTP_PORT = os.getenv("SMTP_PORT")
+
 
 class LogFilter(logging.Filter):
     def filter(self, record):
+        ACCESS_LOG_EXCLUDE = ["/"]
         if record.args and len(record.args) >= 3:
             if record.args[2] in ACCESS_LOG_EXCLUDE:
                 return False

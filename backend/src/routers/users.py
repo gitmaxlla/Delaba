@@ -3,7 +3,7 @@ from ..services import users
 from typing import List
 
 from ..models.users import User as UserModel, \
-    UserCreationRequest, UserCreationResponse, User, \
+    UserCreationRequest, User, \
     Permissions, AdminCreationRequest
 from ..services.auth import admin, logged_in, moderator, \
                             owns_channel, manages_user_id
@@ -44,7 +44,7 @@ def update_user_data(data: dict, user: User = Depends(logged_in)):
 
 @v1_router.post("/moderator")
 def add_moderator(request: UserCreationRequest,
-                  admin: UserModel = Depends(admin)) -> UserCreationResponse:
+                  admin: UserModel = Depends(admin)):
     return users.add_user(login=request.login,
                           role=request.role,
                           channel=request.channel,
@@ -54,7 +54,7 @@ def add_moderator(request: UserCreationRequest,
 
 @v1_router.post("/admin")
 def add_admin(request: AdminCreationRequest,
-              admin: UserModel = Depends(admin)) -> UserCreationResponse:
+              admin: UserModel = Depends(admin)):
     return users.add_user(login=request.login,
                           role=request.role,
                           channel="",
@@ -65,19 +65,21 @@ def add_admin(request: AdminCreationRequest,
 
 @v1_router.post("/")
 def add_user(request: UserCreationRequest,
-             owns_channel: str = Depends(owns_channel)) \
-             -> UserCreationResponse:
+             owns_channel: str = Depends(owns_channel)):
 
+    # TODO: Replace with admin rights check for user 
     if owns_channel != "" and owns_channel != request.channel:
         raise HTTPException(403,
                             "Insufficient rights to manage external channels.")
     request.channel = owns_channel if owns_channel != "" \
         else request.channel
 
-    return users.add_user(login=request.login,
-                          role=request.role,
-                          channel=request.channel,
-                          permissions=Permissions.VIEW_CHANNEL)
+    users.add_user(login=request.login,
+             role=request.role,
+             channel=request.channel,
+             permissions=Permissions.VIEW_CHANNEL)
+    
+    
 
 
 @v1_router.delete("/{id}", response_model=None)

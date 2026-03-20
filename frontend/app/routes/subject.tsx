@@ -46,8 +46,11 @@ export default function Subject() {
 
   useEffect(() => {
     const availableTasks = allTasks.get(name!)
+
     if (availableTasks !== undefined) {
       setTasks(availableTasks)
+    } else {
+      setTasks([])
     }
 
     setMinID(-1)

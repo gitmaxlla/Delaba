@@ -5,12 +5,15 @@ from ..database import db
 from ..schemas.users import User as UserSchema, \
     Permissions, user_from_schema
 
+from ..services.mail import send_login_details
 from ..core.security import hash as pwdlib_hash, generate_password
-from ..models.users import User as UserModel, UserCreationResponse
+from ..models.users import User as UserModel
 
 from ..services.channels import create_channel
 from ..schemas.channels import Channel
 from ..models.channels import ChannelRequest
+
+from ..core.config import ADMIN_MAIL
 
 from sqlalchemy import select
 from sqlalchemy.exc import NoResultFound
@@ -129,27 +132,23 @@ def permissions_to_db(permissions: int) -> str:
 
 
 def add_user(login: str, role: str,
-             channel: str, permissions: Permissions) -> UserCreationResponse:
-    init_token = generate_password()
+             channel: str, permissions: Permissions):
+    init_password = generate_password()
 
     user = UserSchema(
                 login=login,
                 role=role,
                 permissions=permissions_to_db(permissions),
-                password_hashed=pwdlib_hash(init_token),
+                password_hashed=pwdlib_hash(init_password),
                 channel=channel)
-
-    id = None
 
     with db.Session() as session:
         session.add(user)
         session.flush()
         session.refresh(user)
-
-        id = user.id
         session.commit()
 
-    return UserCreationResponse(id=id, init_token=init_token)
+    send_login_details(login, init_password)
 
 
 def user_by_login(login: str) -> UserSchema:
@@ -175,9 +174,10 @@ def get_user(id: int) -> UserModel:
 def create_admin_user():
     random_password = generate_password()
     create_channel(ChannelRequest(channel=""))
+
     user = UserSchema(
                 id=0,
-                login="",
+                login=ADMIN_MAIL,
                 role="Администратор",
                 permissions=permissions_to_db(
                     Permissions.ADMIN
@@ -187,12 +187,17 @@ def create_admin_user():
                 password_hashed=pwdlib_hash(random_password),
                 channel="")
 
+
     with db.Session() as session:
         admin = session.get(UserSchema, 0)
-        if not admin.initialized:
-            session.merge(user)
+        if not admin:
+            session.add(user)
+
+        if admin and not admin.initialized:
+            session.delete(admin)
+            session.add(user)
             
-            print("\n\033[33mRoot login --> admin")
+            print(f"\n\033[33mRoot login --> {ADMIN_MAIL}")
             print(f"\033[33mRoot password --> {random_password}")
             print("(Pass to sysadmin to enter in the web interface to finish initialization)\033[0m\n")
 

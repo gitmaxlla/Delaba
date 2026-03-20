@@ -30,11 +30,6 @@ class AdminCreationRequest(BaseModel):
     role: str
 
 
-class UserCreationResponse(BaseModel):
-    id: int
-    init_token: str
-
-
 class Credentials(BaseModel):
     login: str
     password: str
@@ -42,7 +37,7 @@ class Credentials(BaseModel):
 
 class InitCredentials(BaseModel):
     login: str
-    init_token: str
+    init_password: str
     new_password: str
 
 

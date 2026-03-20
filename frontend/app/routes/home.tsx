@@ -40,6 +40,7 @@ export default function Home() {
     setSubjects(
       Array.from(tasks.keys())
     )
+    console.log(Array.from(tasks.keys()))
   }, [tasks])
 
   useEffect(() => {

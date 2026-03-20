@@ -1,6 +1,6 @@
 import GradientBackground from "~/components/GradientBackground";
 import OnboardingPager from "~/components/OnboardingPager"
-import { baseClient } from "app/store"
+import { baseClient } from "~/store"
 
 import type { Route } from "./+types/index";
 
@@ -35,7 +35,6 @@ export default function Index() {
 
   const [newPassword, setNewPassword] = useState("")
   const [newPasswordCheck, setNewPasswordCheck] = useState("")
-  const [initToken, setInitToken] = useState("")
 
   const [initMode, setInitMode] = useState(false)
 
@@ -55,10 +54,6 @@ export default function Index() {
 
   const newPasswordCheckChanged = (event: any) => {
     setNewPasswordCheck(event.target.value) 
-  }
-
-  const initTokenChanged = (event: any) => {
-    setInitToken(event.target.value) 
   }
 
   const authenticate = () => {
@@ -85,21 +80,22 @@ export default function Index() {
         setErrorMsg("Неверный пароль")
       }
     })
-
   }
 
   function initUser() {
     if (newPassword == newPasswordCheck) {
       baseClient.post("/auth/init", {
         login: login,
+        init_password: password,
         new_password: newPassword,
-        init_token: initToken
       }).then((response) => {
+        console.log(response)
         if (response.status == 200) {
           authorize()
           navigate("/home", {replace: true})
         }
       }).catch((error) => {
+        console.log(error)
         if (error.response.status == 401) {
           setErrorMsg("Неверный токен создания")
         }
@@ -133,7 +129,6 @@ export default function Index() {
               <h2 style={{color: colors.secondary, textAlign: "center", fontSize: "2em"}}>{errorMsg}</h2>
               {initMode ?
               <>
-                <input onChange={initTokenChanged} value={initToken} placeholder="Код создания" type="password" className={styles.textbox} />
                 <input onChange={newPasswordChanged} value={newPassword} placeholder="Новый пароль" type="password" className={styles.textbox} />
                 <input onChange={newPasswordCheckChanged} value={newPasswordCheck} placeholder="Повторите пароль" type="password" className={styles.textbox} />
               </>:

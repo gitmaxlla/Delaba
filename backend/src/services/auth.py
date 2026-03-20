@@ -74,7 +74,10 @@ async def initialize_user(credentials: InitCredentials,
     if user.initialized:
         raise HTTPException(403, "User password has already "
                                  "been changed after account creation.")
-    if validate_hash(credentials.init_token, user.password_hashed):
+ 
+    print(credentials.init_password, user.password_hashed)
+    if validate_hash(credentials.init_password, user.password_hashed):
+        print(1)
         update_user_password(user.id, credentials.new_password)
         mark_user_initialized(user.id)
         set_tokens(TokenPayload(user.id), response)
@@ -96,6 +99,8 @@ async def authenticate_user(
         set_tokens(TokenPayload(user.id), response)
     else:
         raise HTTPException(401, "Provided user password does not match.")
+
+    return None
 
 
 @v1_router.post("/logout", tags=["auth"])

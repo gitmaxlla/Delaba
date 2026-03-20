@@ -16,6 +16,7 @@ from .schemas.channels import Channel
 from .core.config import DEV_MODE, ALLOWED_HOSTNAME, LogFilter
 import logging
 
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     News, User, Task, Channel
@@ -40,7 +41,7 @@ async def rate_limit(request: Request, call_next):
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://127.0.0.1:5173" if DEV_MODE else ALLOWED_HOSTNAME],
+    allow_origins=["http://127.0.0.1:5173", "http://127.0.0.1"] if DEV_MODE else [ALLOWED_HOSTNAME],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"]

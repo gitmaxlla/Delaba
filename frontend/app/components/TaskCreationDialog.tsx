@@ -25,6 +25,7 @@ export default function TaskCreationDialog(
       setCreationTitle("")
       setCreationDeadline("")
       setCreationSubtasks("")
+      setName("")
     }
 
     const onSubjectChanged = (event: any) => {

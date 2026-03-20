@@ -74,20 +74,27 @@ export const useGlobalStore = create<GlobalStore>((set) => ({
                 newTasks.set(subject[0], result)
             }
         }
+
         return {tasks: newTasks}
     }),
     addTask: (task: Task) => set((state) => {
         const newTasks = new Map(state.tasks)
         let taskSubjectTasks = newTasks.get(task.subject)
+        let reorder_required = false
 
         if (taskSubjectTasks === undefined) {
             taskSubjectTasks = []
+            reorder_required = true
         }
 
         const newSubjectTasks = [...taskSubjectTasks, task]
-
         sortByDeadline(newSubjectTasks)
         newTasks.set(task.subject, newSubjectTasks)
+
+        if (reorder_required) {
+            return arrangeTasks([...state.tasks.values()])    
+        }
+
         return {tasks: newTasks}
     }),
     moderator: false,
