@@ -102,20 +102,6 @@ services:
       start_period: 10s
       timeout: 3s
 
-  bucket-creator:
-    image: minio/mc
-    restart: on-failure
-    depends_on:
-      object-storage:
-        condition: service_healthy
-    entrypoint: >
-      sh -c "
-      echo ${MINIO_ROOT_USER} ${MINIO_ROOT_PASSWORD} ${MINIO_DEFAULT_BUCKET};
-      mc alias set bucket-creator http://object-storage:9000 ${MINIO_ROOT_USER} ${MINIO_ROOT_PASSWORD};
-      mc mb bucket-creator/${MINIO_DEFAULT_BUCKET};
-      exit 0;
-      "
-
   mail-server:
     image: axllent/mailpit
     restart: always
