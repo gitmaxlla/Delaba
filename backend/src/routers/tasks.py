@@ -5,21 +5,19 @@ from ..services import tasks
 import fleep
 from ..services.auth import logged_in, moderator, admin, owns_channel, \
                             task_id_reachable
-from ..core.security import generate_uuid
 
 from ..models.tasks import DocumentTaskCreationRequest, Task, \
                            TodoTaskCreationRequest, TaskDeadline, \
                            TaskTitle
 from ..models.users import User
 from typing import Annotated
+from ..database.obj import client as storage, get_default_bucket
 
 import hashlib
-import os
 import datetime
 
+
 v1_router = APIRouter(prefix="/tasks", tags=["tasks"])
-os.makedirs("./uploads/", exist_ok=True)
-os.makedirs("./tmp/", exist_ok=True)
 
 
 @v1_router.get("/")
@@ -64,23 +62,21 @@ async def add_document_task(file: UploadFile,
     request.channel = owns_channel if owns_channel != "" \
         else request.channel
 
-    handle = generate_uuid()
     hasher = hashlib.md5()
     pdf_header_present = False
 
-    with open(f"./tmp/{handle}", "wb") as f:
-        while data := await file.read(2048):
-            if not pdf_header_present:
-                info = fleep.get(data)
-                if not info.extension_matches("pdf"):
-                    raise HTTPException(400,
-                                        "No PDF header on upload.")
-                pdf_header_present = True
-            f.write(data)
-            hasher.update(data)
+    while data := await file.read(2048):
+        if not pdf_header_present:
+            info = fleep.get(data)
+            if not info.extension_matches("pdf"):
+                raise HTTPException(400,
+                                    "No PDF header on upload.")
+            pdf_header_present = True
+        hasher.update(data)
 
     file_hash = hasher.hexdigest()
-    os.rename(f"./tmp/{handle}", f"./uploads/{file_hash}")
+    storage.upload_fileobj(file.file, get_default_bucket(), file_hash, 
+        ExtraArgs={"ContentType": file.content_type})
 
     return tasks.add_document_task(request, file_hash)
 

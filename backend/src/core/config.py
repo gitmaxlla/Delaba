@@ -27,6 +27,13 @@ SMTP_HOSTNAME = os.getenv("SMTP_HOSTNAME")
 SMTP_PORT = os.getenv("SMTP_PORT")
 
 
+OBJ_STORAGE_HOSTNAME = os.getenv("MINIO_HOSTNAME")
+OBJ_STORAGE_PORT = os.getenv("MINIO_PORT")
+OBJ_STORAGE_ROOT_USER = os.getenv("MINIO_ROOT_USER")
+OBJ_STORAGE_ROOT_PASSWORD = os.getenv("MINIO_ROOT_PASSWORD")
+OBJ_STORAGE_DEFAULT_BUCKET = os.getenv("MINIO_DEFAULT_BUCKET")
+
+
 class LogFilter(logging.Filter):
     def filter(self, record):
         ACCESS_LOG_EXCLUDE = ["/"]

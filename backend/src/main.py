@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 
 from .routers import router
-from .database import db
+from .database import db, obj
 from .services.users import create_admin_user
 
 from .core.security import RateLimiter
@@ -20,6 +20,8 @@ import logging
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     News, User, Task, Channel
+    
+    obj.create_default_bucket()
     db.create_all()
     create_admin_user()
     
