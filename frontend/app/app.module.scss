@@ -218,6 +218,7 @@ hr {
 
 .card-subject-compact {
     min-width: 300px;
+    direction: ltr;
     max-width: 300px;
     height: 350px;
     background-color: colors.$primary;
@@ -300,6 +301,7 @@ hr {
 }
 
 .tasks {
+    direction: rtl;
     display: flex;
     flex-direction: row;
     height: 100%;

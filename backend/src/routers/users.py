@@ -1,6 +1,6 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from ..services import users
-from typing import List
+from typing import List, Annotated
 
 from ..models.users import User as UserModel, \
     UserCreationRequest, User, \
@@ -23,8 +23,9 @@ def get_self_permissions(user: User = Depends(logged_in)):
 
 
 @v1_router.get("/", response_model=List[UserModel])
-def get_users(moderator: UserModel = Depends(moderator)):
-    return users.get_by_channel(moderator.channel)
+def get_users(page: Annotated[int, Query(ge=0)] = 0, 
+    page_size: Annotated[int, Query(ge=1, le=50)] = 50, moderator: UserModel = Depends(moderator)):
+    return users.get_by_channel(moderator.channel, page, page_size)
 
 
 @v1_router.get("/{id}", response_model=UserModel)

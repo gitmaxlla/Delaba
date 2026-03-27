@@ -28,7 +28,7 @@ interface SubjectParams {
 export async function clientLoader({
   params,
 }: {params: SubjectParams}) {
-  if (!useGlobalStore.getState().authorized || useGlobalStore.getState().tasks.get(params.name) === undefined) {
+  if (!useGlobalStore.getState().authorized) {
     return redirect("/")
   }
 }
@@ -48,14 +48,14 @@ export default function Subject() {
     const availableTasks = allTasks.get(name!)
 
     if (availableTasks !== undefined) {
-      setTasks(availableTasks)
+      setTasks(availableTasks.reverse())
     } else {
       setTasks([])
     }
 
     setMinID(-1)
     for (let i = 0; i < tasks.length; i++) {
-      if (tasks[i].id < minID) {
+      if (tasks[i].id > minID) {
         setMinID(tasks[i].id)
       }
     }
@@ -85,15 +85,15 @@ export default function Subject() {
               <h2 style={{fontSize: "1.5em", transform: "translateY(-0.3em)", color: subjectColors.get(name!)}}>Всего работ: {tasks.length}</h2>
             </div>
             <div className={styles.tasks}>
-              {Object.entries(tasks).map(([num, task]) => (
-                  <TaskCard key={task.id} editMode={editMode} toFocusId={focusId} task={task} num={parseInt(num)+1}/> // TODO: why's num string?
-              ))}
-              
               <div onClick={() => {setShowCreationDialog(true)}} className={styles["card-subject-compact"]} style={{display: editMode ? "flex" : "none", backgroundColor: "transparent", border: "5px dashed black"}}>
                 <div style={{width: "100%", height: "100%", display: "flex", justifyContent: "center", alignItems: "center"}}>
                   <div style={{color: "black", fontSize: "5em", transform: "translateY(-0.1em)", userSelect: "none"}}>+</div>
                 </div>
               </div>
+
+              {Object.entries(tasks).map(([num, task]) => (
+                  <TaskCard key={task.id} editMode={editMode} toFocusId={focusId} task={task} num={tasks.length - (parseInt(num))}/> // TODO: why's num string?
+              ))}
             </div>
         </div>
       </div>

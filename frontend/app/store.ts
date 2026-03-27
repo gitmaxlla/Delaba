@@ -70,6 +70,14 @@ export const useGlobalStore = create<GlobalStore>((set) => ({
             const result = newTasks.get(subject[0])!.filter((task) => task.id != taskId)
             if (result?.length == 0) {
                 newTasks.delete(subject[0])
+                let subject_colors = new Map<string, string>()
+                const available_colors = [colors.primary, colors.secondary, colors.tertiary]
+
+                for (const [index, subject] of [...state.tasks.keys()].entries()) {
+                    subject_colors.set(subject, available_colors[index % 3])
+                }
+
+                useGlobalStore.getState().setColors(subject_colors)
             } else {
                 newTasks.set(subject[0], result)
             }
@@ -78,24 +86,15 @@ export const useGlobalStore = create<GlobalStore>((set) => ({
         return {tasks: newTasks}
     }),
     addTask: (task: Task) => set((state) => {
-        const newTasks = new Map(state.tasks)
-        let taskSubjectTasks = newTasks.get(task.subject)
-        let reorder_required = false
+        let tasksFlattened: Task[] = []
+        state.tasks.forEach((tasks, subject) => {
+            for (task of tasks) {
+                tasksFlattened.push(task)
+            }
+        })
 
-        if (taskSubjectTasks === undefined) {
-            taskSubjectTasks = []
-            reorder_required = true
-        }
-
-        const newSubjectTasks = [...taskSubjectTasks, task]
-        sortByDeadline(newSubjectTasks)
-        newTasks.set(task.subject, newSubjectTasks)
-
-        if (reorder_required) {
-            return arrangeTasks([...state.tasks.values()])    
-        }
-
-        return {tasks: newTasks}
+        const newTasks = [...tasksFlattened,  task]
+        return {tasks: arrangeTasks(newTasks)}
     }),
     moderator: false,
     addCompletedLocal: (taskId: number) => set((state) => {

@@ -25,7 +25,7 @@ export default function TaskCreationDialog(
       setCreationTitle("")
       setCreationDeadline("")
       setCreationSubtasks("")
-      setName("")
+      if (subject == "") setName("")
     }
 
     const onSubjectChanged = (event: any) => {
@@ -112,12 +112,14 @@ export default function TaskCreationDialog(
                       resetCreationData()
                     })
                   } else if (file != null) {
+                    console.log(""+name)
+
                     const formData = new FormData()
                     formData.append("file", file as File)
-                    formData.append("subject", ""+name)
                     formData.append("title", creationTitle)
-                    formData.append("channel", channel)
+                    formData.append("subject", ""+name)
                     formData.append("deadline", dateToUTC(creationDeadline))
+                    formData.append("channel", channel)
 
                     authClient.post("/tasks/document", formData).then((response) => {
                       const newTaskId = response.data

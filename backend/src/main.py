@@ -27,7 +27,16 @@ async def lifespan(app: FastAPI):
     
     yield
 
+
 app = FastAPI(lifespan=lifespan)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://127.0.0.1:5173", "http://127.0.0.1"] if DEV_MODE else [ALLOWED_HOSTNAME],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"]
+)
+
 logging.getLogger("uvicorn.access").addFilter(LogFilter())
 
 @app.middleware("http")
@@ -41,11 +50,4 @@ async def rate_limit(request: Request, call_next):
     response = await call_next(request)
     return response
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["http://127.0.0.1:5173", "http://127.0.0.1"] if DEV_MODE else [ALLOWED_HOSTNAME],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"]
-)
 app.include_router(router)

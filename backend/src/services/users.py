@@ -203,7 +203,7 @@ def create_admin_user():
 
         session.commit()
 
-def get_by_channel(channel: str) -> List[UserModel]:
+def get_by_channel(channel: str, page: int, page_size: int) -> List[UserModel]:
     users = []
 
     with db.Session() as session:
@@ -211,6 +211,7 @@ def get_by_channel(channel: str) -> List[UserModel]:
         if channel != "":
             query = query \
                 .where(UserSchema.channel == channel)
+        query = query.offset(page*page_size).limit(page_size)
         users = session.scalars(query).all()
 
     return [user_from_schema(user) for user in users]

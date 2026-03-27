@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, UploadFile, HTTPException, Form
-from fastapi.responses import FileResponse
+from fastapi.responses import StreamingResponse
 from ..services import tasks
 
 import fleep
@@ -39,10 +39,10 @@ def add_todo_task(request: TodoTaskCreationRequest,
 
 @v1_router.post("/document")
 async def add_document_task(file: UploadFile,
-                            channel: Annotated[str, Form()],
                             title: Annotated[str, Form()],
                             subject: Annotated[str, Form()],
                             deadline: Annotated[datetime.datetime, Form()],
+                            channel: Annotated[str, Form()] = "",
                             owns_channel: str = Depends(owns_channel)):
 
     if file.size > 20*1024*1024:
@@ -75,6 +75,10 @@ async def add_document_task(file: UploadFile,
         hasher.update(data)
 
     file_hash = hasher.hexdigest()
+
+    await file.seek(0)
+    file.file.seek(0)
+    
     storage.upload_fileobj(file.file, get_default_bucket(), file_hash, 
         ExtraArgs={"ContentType": file.content_type})
 
@@ -91,7 +95,9 @@ def get_task(id: int,
 def get_document_file(id: int,
                       permitted: User = Depends(task_id_reachable)):
     file_hash = tasks.get_document_file_hash(id)
-    return FileResponse(f"./uploads/{file_hash}", media_type="application_pdf")
+    file = storage.get_object(Bucket=get_default_bucket(), Key=file_hash)
+    print(file, flush=True)
+    return StreamingResponse(file["Body"].iter_chunks(), media_type="application_pdf")
 
 
 @v1_router.delete("/{id}")
