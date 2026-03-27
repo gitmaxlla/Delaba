@@ -38,7 +38,7 @@ def update_user_data(user: UserModel, data: dict):
 def get_user_permissions(user: UserModel) -> int:
     with db.Session() as session:
         db_user = session.get(UserSchema, user.id)
-        session.flush()
+        session.commit()
         session.refresh(db_user)
 
         return int(db_user.permissions, 2)
@@ -49,7 +49,7 @@ def get_user_data(user: UserModel) -> dict:
 
     with db.Session() as session:
         db_user = session.get(UserSchema, user.id)
-        session.flush()
+        session.commit()
         session.refresh(db_user)
 
         data = db_user.data

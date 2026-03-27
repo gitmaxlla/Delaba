@@ -1,88 +1,59 @@
-from fastapi import APIRouter, Response
-from ..services.users import ban_user, make_moderator, unban_user, \
-                             make_admin, make_default
-from ..services.auth import set_tokens
+import time
+import datetime
+import random
 
+from faker import Faker
+from fastapi import APIRouter, Response
+
+from ..services.auth import set_tokens, TokenPayload
+from ..services.news import add_news
 from ..services.users import add_user, Permissions
-from ..services.channels import create_channel
+from ..services.channels import create_channel, ChannelRequest
+from ..services.users import ban_user, make_moderator, unban_user, \
+                             make_admin, make_default, get_all_users
 from ..services.tasks import add_document_task, add_todo_task, \
                              TodoTaskCreationRequest, \
                              DocumentTaskCreationRequest
 
-from ..services.auth import TokenPayload
-
-from ..models.channels import ChannelRequest
 from ..models.news import NewsCreationRequest
-
-from ..services.news import add_news
-
-import time
-import datetime
-
 from ..database import db
 
+
+fake = Faker()
 v1_router = APIRouter(prefix="/mock", tags=["mock"])
 
 
 def mock_data():
-    create_channel(ChannelRequest(channel="Университет 1 Группа 2"))
-    create_channel(ChannelRequest(channel="Университет 2 Группа 3"))
+    CHANNELS=10
+    USERS=50
+    TODOS=150
+    NEWS=50
 
-    _ = add_user("mock1", "Тестовый пользователь",
-                              "",
-                              Permissions.VIEW_CHANNEL)
-    test_user_data = add_user("mock", "Тестовый пользователь",
-                              "Университет 1 Группа 2", 
-                              Permissions.VIEW_CHANNEL)
-    add_user("mock2", "Тестовый пользователь",
-             "Университет 2 Группа 3", Permissions.VIEW_CHANNEL)
+    channels = [" ".join(fake.words(3)) for i in range(CHANNELS)]
+    subjects = [" ".join(fake.words(2)) for i in range(TODOS // 10)]
+    sections = [fake.word() for i in range(5)]
+    users = get_all_users()
 
-    add_todo_task(TodoTaskCreationRequest(
-        subject="Высшая математика", title="Задачи на матрицы",
-        channel="Университет 1 Группа 2",
-        deadline=datetime.datetime(2024, 8, 8), subtasks=["Задача 5", "Задача 7"]
-    ))
+    for channel in channels:
+        create_channel(ChannelRequest(channel=channel))
 
-    add_todo_task(TodoTaskCreationRequest(
-        subject="Высшая математика", title="Задачи на интегрирование",
-        channel="Университет 2 Группа 3",
-        deadline=datetime.datetime.now(), subtasks=["Задача 10"]
-    ))
+    for i in range(USERS):
+        channel = random.choice(channels)
+        add_user(fake.email(), fake.name(),
+                 channel, Permissions.VIEW_CHANNEL)
 
-    add_todo_task(TodoTaskCreationRequest(
-        subject="Высшая математика", title="Задачи на дифференцирование",
-        channel="Университет 1 Группа 2",
-        deadline=datetime.datetime.now(), subtasks=["Задача 1"]
-    ))
+    for i in range(TODOS):
+        add_todo_task(TodoTaskCreationRequest(
+            subject=random.choice(subjects), title=" ".join(fake.words(5)),
+            channel=random.choice(channels),
+            deadline=fake.date_time_this_year(after_now=True), subtasks=fake.words(3)
+        ))
 
-    add_document_task(DocumentTaskCreationRequest(
-        subject="Операционные системы",
-        title="Лабораторная работа №12",
-        channel="Университет 1 Группа 2",
-        deadline=datetime.datetime.now()),
-        file_hash="5d1fc818fe087e62cab755a27421073a"
-    )
-
-    add_news(NewsCreationRequest(section="Зачёты", channel="Университет 1 Группа 2", title="Дата зачёта", message="Зачёт 10 января"), 1)
-    add_news(NewsCreationRequest(section="Экзамены", channel="Университет 2 Группа 3", title="Дата экзамена", message="Зачёт 10 января"), 1)
-    add_news(NewsCreationRequest(section="Расписание", channel="Университет 2 Группа 3", title="Новое расписание", message="Пары по веб-разработке теперь по вторникам будут проходить"), 1)
-
-    add_todo_task(TodoTaskCreationRequest(
-        subject="Операционные системы", title="Задачи по командам",
-        channel="Университет 1 Группа 2",
-        deadline=datetime.datetime(2025, 12, 20), subtasks=["Задание 1", "Придумать задание 2"]
-    ))
-
-    add_document_task(DocumentTaskCreationRequest(
-        subject="Операционные системы",
-        title="Лабораторная работа №11",
-        channel="Университет 1 Группа 2",
-        deadline=datetime.datetime(2025, 12, 15)),
-        file_hash="5293ef73cb2d0a3576c8eb99c0e464c6"
-    )
-
-    time.sleep(2)
-    print(f"\t\t{test_user_data}")
+    for i in range(NEWS):
+        user = random.choice(users)
+        add_news(NewsCreationRequest(section=random.choice(sections), 
+                                     channel=user.channel, title=" ".join(fake.words(5)), 
+                                     message=fake.text(100)), user.id)
 
 
 @v1_router.post("/sample", tags=["mock"])

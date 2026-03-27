@@ -72,7 +72,11 @@ export default function Index() {
       }
     }).catch((error) => {
       const status = error.response.status
-      if (status == 403) {
+      const msg = error.response.data.detail as string
+      // TODO: not very robust, but alright as a quick fix
+      if (msg.includes("banned")) {
+        setErrorMsg("Доступ заблокирован")
+      } else if (status == 403) {
         setInitMode(true)
       } else if (status == 404) {
         setErrorMsg("Пользователь не найден")

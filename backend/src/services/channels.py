@@ -59,7 +59,7 @@ def get_channels(user: UserModel) -> List[str]:
 def create_channel(request: ChannelRequest):
     with db.Session() as session:
         session.merge(Channel(name=request.channel))
-        session.flush()
+        session.commit()
 
 
 def delete_channel(request: ChannelRequest):

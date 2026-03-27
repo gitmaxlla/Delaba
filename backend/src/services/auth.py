@@ -90,13 +90,15 @@ async def authenticate_user(
         credentials: Credentials, response: Response) -> None:
     user: User = user_by_login(credentials.login)
 
-    if not user.initialized:
-        raise HTTPException(403, "User should change the password beforehand.")
-    elif banned(user_from_schema(user)):
+    if banned(user_from_schema(user)):
         raise HTTPException(403, "User is banned.")
 
     if validate_hash(credentials.password, user.password_hashed):
-        set_tokens(TokenPayload(user.id), response)
+        if user.initialized:
+            set_tokens(TokenPayload(user.id), response)
+        else:
+            raise HTTPException(403, "User should change the password beforehand.")
+
     else:
         raise HTTPException(401, "Provided user password does not match.")
 
