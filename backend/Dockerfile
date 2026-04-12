@@ -10,11 +10,15 @@ RUN uv tool install uvicorn
 
 COPY src ./src
 COPY run.py .
+COPY __init__.py .
 
 RUN apt-get update && apt-get install -y curl \
-    && rm -rf /var/lib/apt/lists/*
+  && rm -rf /var/lib/apt/lists/*
 
-CMD ["uv", "run", "run.py"]
+CMD ["uv", "run", "-m", "run"]
+
+
+
 
 
 FROM python:3.14-slim-trixie AS production
@@ -32,6 +36,6 @@ COPY src ./src
 COPY run.py .
 
 RUN apt-get update && apt-get install -y curl \
-    && rm -rf /var/lib/apt/lists/*
+  && rm -rf /var/lib/apt/lists/*
 
 CMD ["uv", "run", "run.py"]

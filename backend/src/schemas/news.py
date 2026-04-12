@@ -1,32 +1,51 @@
-from ..database.db import Base
-from sqlalchemy.orm import Mapped, mapped_column
-from sqlalchemy import DateTime, func, ForeignKey
-
+from pydantic import BaseModel, ConfigDict
 import datetime
-from ..models.news import News as NewsModel
 
 
-class News(Base):
-    __tablename__ = "news"
+class NewsBase(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
 
-    id: Mapped[int] = mapped_column(primary_key=True)
-    section: Mapped[str] = mapped_column(nullable=True)
-    channel: Mapped[str] = mapped_column(ForeignKey("channels.name"))
+    id: int
+    channel: str
+    section: str
+    title: str
 
-    postedAt: Mapped[datetime.datetime] = mapped_column(
-        DateTime, default=func.now())
+    message: str
+    bound_task_id: int | None
 
-    modifiedAt: Mapped[datetime.datetime] = mapped_column(
-        DateTime, default=func.now())
-
-    by: Mapped[int] = mapped_column(ForeignKey("users.id"))
-    bound_task_id: Mapped[int] = mapped_column(
-        ForeignKey("tasks.id"), nullable=True)
-
-    title: Mapped[str] = mapped_column()
-    message: Mapped[str] = mapped_column()
+    postedAt: datetime.datetime
+    modifiedAt: datetime.datetime
 
 
-def news_from_schema(news: News) -> NewsModel:
-    news = news.__dict__
-    return NewsModel.model_validate(news)
+class News(NewsBase):
+    by: int
+
+
+class NewsCreate(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    channel: str
+    section: str
+    title: str
+
+    message: str
+    bound_task_id: int | None = None
+
+
+class NewsTitleUpdate(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    title: str
+
+
+class NewsMessageUpdate(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    message: str
+
+
+class NewsSectionUpdate(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    section: str
+
+
+class NewsResponse(NewsBase):
+    by: str

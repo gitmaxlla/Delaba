@@ -1,11 +1,11 @@
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, DeclarativeBase
-from sqlalchemy_utils import database_exists, create_database
+from sqlalchemy.orm import DeclarativeBase, sessionmaker
+from sqlalchemy_utils import create_database, database_exists
 
-from ..core.config import DATABASE_URL, SQLALCHEMY_ECHO
+from src.core.config import DATABASE_URL, SQLALCHEMY_ECHO
+
 
 engine = create_engine(DATABASE_URL, echo=SQLALCHEMY_ECHO)
-
 if not database_exists(engine.url):
     create_database(engine.url)
 
@@ -16,9 +16,9 @@ class Base(DeclarativeBase):
     pass
 
 
-def drop_all():
-    Base.metadata.drop_all(engine)
-
-
 def create_all():
     Base.metadata.create_all(engine)
+
+
+def drop_all():
+    Base.metadata.drop_all(engine)

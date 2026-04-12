@@ -1,13 +1,20 @@
-from fastapi import APIRouter, Depends, HTTPException, Query
-from ..services import users
-from typing import List, Annotated
+from typing import Annotated, List
 
-from ..models.users import User as UserModel, \
-    UserCreationRequest, User, \
-    Permissions, AdminCreationRequest
-from ..services.auth import admin, logged_in, moderator, \
-                            owns_channel, manages_user_id
-from ..models.channels import ChannelRequest
+from fastapi import APIRouter, Depends, HTTPException, Query
+
+from src.schemas.channels import ChannelCreate
+from src.schemas.users import (
+    AdminCreate,
+    Permissions,
+    User,
+    UserCreate,
+)
+from src.schemas.users import (
+    User as UserModel,
+)
+from src.services import users
+from src.services.auth import admin, logged_in, manages_user_id, moderator, owns_channel
+
 
 v1_router = APIRouter(prefix="/users", tags=["users"])
 
@@ -19,12 +26,15 @@ def get_user_data(user: User = Depends(logged_in)):
 
 @v1_router.get("/permissions", response_model=int)
 def get_self_permissions(user: User = Depends(logged_in)):
-    return users.get_user_permissions(user)
+    return users.get_user_permissions(user.permissions)
 
 
 @v1_router.get("/", response_model=List[UserModel])
-def get_users(page: Annotated[int, Query(ge=0)] = 0, 
-    page_size: Annotated[int, Query(ge=1, le=50)] = 50, moderator: UserModel = Depends(moderator)):
+def get_users(
+    page: Annotated[int, Query(ge=0)] = 0,
+    page_size: Annotated[int, Query(ge=1, le=50)] = 50,
+    moderator: UserModel = Depends(moderator),
+):
     return users.get_by_channel(moderator.channel, page, page_size)
 
 
@@ -34,71 +44,68 @@ def get_user(id):
 
 
 @v1_router.get("/{id}/data", response_model=dict)
-def get_user_data_by_id(id, admin: User = Depends(admin)):
+def get_user_data_by_id(id, _: User = Depends(admin)):
     return users.get_user_data(users.get_user(id))
 
 
 @v1_router.put("/data")
 def update_user_data(data: dict, user: User = Depends(logged_in)):
-    users.update_user_data(user, data)
+    users.update_user_data(user.id, data)
 
 
 @v1_router.post("/moderator")
-def add_moderator(request: UserCreationRequest,
-                  admin: UserModel = Depends(admin)):
-    return users.add_user(login=request.login,
-                          role=request.role,
-                          channel=request.channel,
-                          permissions=(Permissions.MANAGE_CHANNEL
-                                       & Permissions.VIEW_CHANNEL))
+def add_moderator(request: UserCreate, _: UserModel = Depends(admin)):
+    return users.add_user(
+        login=request.login,
+        role=request.role,
+        channel=request.channel,
+        permissions=(Permissions.MANAGE_CHANNEL & Permissions.VIEW_CHANNEL),
+    )
 
 
 @v1_router.post("/admin")
-def add_admin(request: AdminCreationRequest,
-              admin: UserModel = Depends(admin)):
-    return users.add_user(login=request.login,
-                          role=request.role,
-                          channel="",
-                          permissions=(Permissions.MANAGE_CHANNEL
-                                       & Permissions.VIEW_CHANNEL
-                                       & Permissions.ADMIN))
+def add_admin(request: AdminCreate, _: UserModel = Depends(admin)):
+    return users.add_user(
+        login=request.login,
+        role=request.role,
+        channel="",
+        permissions=(
+            Permissions.MANAGE_CHANNEL & Permissions.VIEW_CHANNEL & Permissions.ADMIN
+        ),
+    )
 
 
 @v1_router.post("/")
-def add_user(request: UserCreationRequest,
-             owns_channel: str = Depends(owns_channel)):
+def add_user(request: UserCreate, owns_channel: str = Depends(owns_channel)):
 
-    # TODO: Replace with admin rights check for user 
+    # TODO: Replace with admin rights check for user
     if owns_channel != "" and owns_channel != request.channel:
-        raise HTTPException(403,
-                            "Insufficient rights to manage external channels.")
-    request.channel = owns_channel if owns_channel != "" \
-        else request.channel
+        raise HTTPException(403, "Insufficient rights to manage external channels.")
+    request.channel = owns_channel if owns_channel != "" else request.channel
 
-    users.add_user(login=request.login,
-             role=request.role,
-             channel=request.channel,
-             permissions=Permissions.VIEW_CHANNEL)
-    
-    
+    users.add_user(
+        login=request.login,
+        role=request.role,
+        channel=request.channel,
+        permissions=Permissions.VIEW_CHANNEL,
+    )
 
 
 @v1_router.delete("/{id}", response_model=None)
-def delete_user(id, user: User = Depends(manages_user_id)):
+def delete_user(id, _: User = Depends(manages_user_id)):
     users.delete_user(id)
 
 
 @v1_router.patch("/{id}/channel")
-def transfer_user(id: int, request: ChannelRequest,
-                  user: User = Depends(admin)):
-    users.transfer_user(user.id, request.channel)
+async def transfer_user(id: int, request: ChannelCreate, _: User = Depends(admin)):
+    await users.transfer_user(id, request.channel)
 
 
 @v1_router.get("/{id}/ban")
-def ban_user(user: User = Depends(manages_user_id)):
-    users.ban_user(user.id)
+async def ban_user(user: User = Depends(manages_user_id)):
+    await users.ban_user(user.id)
 
 
 @v1_router.get("/{id}/unban")
-def unban_user(user: User = Depends(manages_user_id)):
-    users.unban_user(user.id)
+async def unban_user(user: User = Depends(manages_user_id)):
+    await users.unban_user(user.id)

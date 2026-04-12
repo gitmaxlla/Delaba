@@ -1,38 +1,48 @@
-from ..database.db import Base
-from sqlalchemy.dialects.postgresql import JSONB
-from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy import DateTime, func, ForeignKey
-from ..models.tasks import Task as TaskModel
+from pydantic import BaseModel, ConfigDict
 import datetime
-
-from ..schemas.news import News
-
-
-class Task(Base):
-    __tablename__ = "tasks"
-
-    id: Mapped[int] = mapped_column(primary_key=True)
-    createdAt: Mapped[datetime.datetime] = \
-        mapped_column(DateTime, default=func.now())
-    modifiedAt: Mapped[datetime.datetime] = \
-        mapped_column(DateTime, default=func.now())
-
-    type: Mapped[str] = mapped_column()
-    subject: Mapped[str] = mapped_column()
-    channel: Mapped[str] = mapped_column(
-        ForeignKey("channels.name"))
-
-    title: Mapped[str] = mapped_column()
-    deadline: Mapped[datetime.datetime] = mapped_column(
-        DateTime, default=func.now())
-
-    fileHash: Mapped[str] = mapped_column(nullable=True)
-    subtasks: Mapped[JSONB] = mapped_column(JSONB, nullable=True)
-
-    news: Mapped["News"] = relationship(backref="task",
-                                        cascade="all, delete")
+from typing import List
 
 
-def task_from_schema(task: Task) -> TaskModel:
-    task = task.__dict__
-    return TaskModel.model_validate(task)
+class Task(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    createdAt: datetime.datetime
+    modifiedAt: datetime.datetime
+    type: str
+    channel: str
+    subject: str
+    title: str
+
+    deadline: datetime.datetime
+    subtasks: list | None
+    fileHash: str | None
+
+
+class DocumentTaskCreate(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    subject: str
+    title: str
+    channel: str
+    deadline: datetime.datetime
+
+
+class TodoTaskCreate(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    subject: str
+    title: str
+    channel: str
+    deadline: datetime.datetime
+    subtasks: List[str]
+
+
+class TaskDeadlineUpdate(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    deadline: datetime.datetime
+
+
+class TaskTitleUpdate(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    title: str

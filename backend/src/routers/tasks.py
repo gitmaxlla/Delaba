@@ -1,21 +1,24 @@
-from fastapi import APIRouter, Depends, UploadFile, HTTPException, Form
-from fastapi.responses import StreamingResponse
-from ..services import tasks
+import datetime
+import hashlib
+from typing import Annotated
 
 import fleep
-from ..services.auth import logged_in, moderator, admin, owns_channel, \
-                            task_id_reachable
+from fastapi import APIRouter, Depends, Form, HTTPException, UploadFile
+from fastapi.responses import StreamingResponse
 
-from ..models.tasks import DocumentTaskCreationRequest, Task, \
-                           TodoTaskCreationRequest, TaskDeadline, \
-                           TaskTitle
-from ..models.users import User
-from typing import Annotated
-from ..database.obj import client as storage, get_default_bucket
-
-import hashlib
-import datetime
-
+from src.core.config import FILE_UPLOAD_LIMIT_BYTES
+from src.database.obj import client as storage
+from src.database.obj import get_default_bucket
+from src.schemas.tasks import (
+    DocumentTaskCreate,
+    Task,
+    TaskDeadlineUpdate,
+    TaskTitleUpdate,
+    TodoTaskCreate,
+)
+from src.schemas.users import User
+from src.services import tasks
+from src.services.auth import logged_in, owns_channel, task_id_reachable
 
 v1_router = APIRouter(prefix="/tasks", tags=["tasks"])
 
@@ -26,41 +29,34 @@ def get_tasks(user: User = Depends(logged_in)):
 
 
 @v1_router.post("/todo")
-def add_todo_task(request: TodoTaskCreationRequest,
-                  owns_channel: str = Depends(owns_channel)):
+def add_todo_task(request: TodoTaskCreate, owns_channel: str = Depends(owns_channel)):
     if owns_channel != "" and owns_channel != request.channel:
-        raise HTTPException(403,
-                            "Insufficient rights to manage external channels.")
-    request.channel = owns_channel if owns_channel != "" \
-        else request.channel
+        raise HTTPException(403, "Insufficient rights to manage external channels.")
+    request.channel = owns_channel if owns_channel != "" else request.channel
 
     return tasks.add_todo_task(request)
 
 
 @v1_router.post("/document")
-async def add_document_task(file: UploadFile,
-                            title: Annotated[str, Form()],
-                            subject: Annotated[str, Form()],
-                            deadline: Annotated[datetime.datetime, Form()],
-                            channel: Annotated[str, Form()] = "",
-                            owns_channel: str = Depends(owns_channel)):
+async def add_document_task(
+    file: UploadFile,
+    title: Annotated[str, Form()],
+    subject: Annotated[str, Form()],
+    deadline: Annotated[datetime.datetime, Form()],
+    channel: Annotated[str, Form()] = "",
+    owns_channel: str = Depends(owns_channel),
+):
+    # TODO: if not file.size then exception
+    if file.size and file.size > FILE_UPLOAD_LIMIT_BYTES:
+        raise HTTPException(413, "File upload limit has been exceeded (20 MB).")
 
-    if file.size > 20*1024*1024:
-        raise HTTPException(413,
-                            "File upload limit has been exceeded (20 MB).")
-
-    request = DocumentTaskCreationRequest(
-        subject=subject,
-        title=title,
-        channel=channel,
-        deadline=deadline
+    request = DocumentTaskCreate(
+        subject=subject, title=title, channel=channel, deadline=deadline
     )
 
     if owns_channel != "" and owns_channel != channel:
-        raise HTTPException(403,
-                            "Insufficient rights to manage external channels.")
-    request.channel = owns_channel if owns_channel != "" \
-        else request.channel
+        raise HTTPException(403, "Insufficient rights to manage external channels.")
+    request.channel = owns_channel if owns_channel != "" else request.channel
 
     hasher = hashlib.md5()
     pdf_header_present = False
@@ -69,8 +65,7 @@ async def add_document_task(file: UploadFile,
         if not pdf_header_present:
             info = fleep.get(data)
             if not info.extension_matches("pdf"):
-                raise HTTPException(400,
-                                    "No PDF header on upload.")
+                raise HTTPException(400, "No PDF header on upload.")
             pdf_header_present = True
         hasher.update(data)
 
@@ -78,22 +73,24 @@ async def add_document_task(file: UploadFile,
 
     await file.seek(0)
     file.file.seek(0)
-    
-    storage.upload_fileobj(file.file, get_default_bucket(), file_hash, 
-        ExtraArgs={"ContentType": file.content_type})
+
+    storage.upload_fileobj(
+        file.file,
+        get_default_bucket(),
+        file_hash,
+        ExtraArgs={"ContentType": file.content_type},
+    )
 
     return tasks.add_document_task(request, file_hash)
 
 
 @v1_router.get("/{id}", response_model=Task)
-def get_task(id: int,
-             permitted: User = Depends(task_id_reachable)):
+def get_task(id: int, _: User = Depends(task_id_reachable)):
     return tasks.get_task(id)
 
 
 @v1_router.get("/{id}/file")
-def get_document_file(id: int,
-                      permitted: User = Depends(task_id_reachable)):
+def get_document_file(id: int, _: User = Depends(task_id_reachable)):
     file_hash = tasks.get_document_file_hash(id)
     file = storage.get_object(Bucket=get_default_bucket(), Key=file_hash)
     print(file, flush=True)
@@ -101,20 +98,19 @@ def get_document_file(id: int,
 
 
 @v1_router.delete("/{id}")
-def delete_task(id,
-                permitted: User = Depends(task_id_reachable)):
+def delete_task(id, _: User = Depends(task_id_reachable)):
     tasks.delete_task(id)
 
 
 @v1_router.patch("/{id}/deadline")
-def change_task_deadline(id: int,
-                         request: TaskDeadline,
-                         permitted: User = Depends(task_id_reachable)):
+def change_task_deadline(
+    id: int, request: TaskDeadlineUpdate, _: User = Depends(task_id_reachable)
+):
     tasks.change_task_deadline(id, request.deadline)
 
 
 @v1_router.patch("/{id}/title")
-def change_task_heading(id: int,
-                        request: TaskTitle,
-                        permitted: User = Depends(task_id_reachable)):
-    tasks.change_task_heading(id, request.title)
+def change_task_heading(
+    id: int, request: TaskTitleUpdate, _: User = Depends(task_id_reachable)
+):
+    tasks.change_task_title(id, request.title)

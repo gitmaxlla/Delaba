@@ -1,19 +1,13 @@
-from typing import List
-import math
+from typing import List, cast
 
-from ..database import db
-from ..schemas.users import User as UserSchema, \
-    Permissions, user_from_schema
+from src.database import db
+from src.models.users import User as UserModel
+from src.schemas.users import User as UserSchema
 
-from ..services.mail import send_login_details
-from ..core.security import hash as pwdlib_hash, generate_password
-from ..models.users import User as UserModel
-
-from ..services.channels import create_channel
-from ..schemas.channels import Channel
-from ..models.channels import ChannelRequest
-
-from ..core.config import ADMIN_MAIL
+from src.services.mail import send_login_details
+from src.core.security import hash as pwdlib_hash, generate_password
+from src.core.permissions import Permissions, to_binstr
+from src.adapters.sqlalchemy_pydantic import to_user_schema
 
 from sqlalchemy import select
 from sqlalchemy.exc import NoResultFound
@@ -22,125 +16,111 @@ from fastapi import HTTPException
 
 
 def delete_user(id: int):
-    with db.Session() as session:
-        user = session.get(UserSchema, id)
+    with db.Session.begin() as session:
+        user = session.get(UserModel, id)
         session.delete(user)
-        session.commit()
 
 
-def update_user_data(user: UserModel, data: dict):
+def update_user_data(id: int, data: dict):
+    with db.Session.begin() as session:
+        user = session.get(UserModel, id)
+        if user:
+            user.data = data
+
+
+def get_user_permissions(id: int) -> int:
     with db.Session() as session:
-        db_user = session.get(UserSchema, user.id)
-        db_user.data = data
+        user = session.get(UserModel, id)
         session.commit()
+        session.refresh(user)
+
+        if user:
+            return int(user.permissions, 2)
+        return 0
 
 
-def get_user_permissions(user: UserModel) -> int:
-    with db.Session() as session:
-        db_user = session.get(UserSchema, user.id)
-        session.commit()
-        session.refresh(db_user)
-
-        return int(db_user.permissions, 2)
-
-
-def get_user_data(user: UserModel) -> dict:
+def get_user_data(id: int) -> dict:
     data = {}
 
     with db.Session() as session:
-        db_user = session.get(UserSchema, user.id)
-        session.commit()
-        session.refresh(db_user)
-
-        data = db_user.data
+        user = session.get(UserModel, id)
+        if user:
+            data = user.data.__dict__
 
     return data
 
 
 def update_user_password(id, new_password):
-    with db.Session() as session:
-        user = session.get(UserSchema, id)
+    with db.Session.begin() as session:
+        user = session.get(UserModel, id)
         user.password_hashed = pwdlib_hash(new_password)
-        session.commit()
 
 
 def mark_user_initialized(id):
-    with db.Session() as session:
-        user = session.get(UserSchema, id)
+    with db.Session.begin() as session:
+        user = session.get(UserModel, id)
         user.initialized = True
-        session.commit()
 
 
 async def ban_user(id):
-    if id == 0: 
+    if id == 0:
         return
-    
+
     with db.Session() as session:
-        user = session.get(UserSchema, id)
-        user.permissions = permissions_to_db(
-            int(user.permissions, 2) & Permissions.BANNED)
+        user = session.get(UserModel, id)
+        user.permissions = to_binstr(int(user.permissions, 2) & Permissions.BANNED)
         session.commit()
 
 
 async def transfer_user(id: int, channel: str):
     with db.Session() as session:
-        user = session.get(UserSchema, id)
+        user = session.get(UserModel, id)
         user.channel = channel
         session.commit()
 
 
 async def unban_user(id):
     with db.Session() as session:
-        user = session.get(UserSchema, id)
-        user.permissions = permissions_to_db(
-            int(user.permissions, 2) & (~Permissions.BANNED))
+        user = session.get(UserModel, id)
+        user.permissions = to_binstr(int(user.permissions, 2) & (~Permissions.BANNED))
         session.commit()
 
 
 async def make_admin(id):
     with db.Session() as session:
-        user = session.get(UserSchema, id)
-        user.permissions = permissions_to_db(
-            Permissions.VIEW_CHANNEL
-            | Permissions.ADMIN
-            | Permissions.MANAGE_CHANNEL)
+        user = session.get(UserModel, id)
+        user.permissions = to_binstr(
+            Permissions.VIEW_CHANNEL | Permissions.ADMIN | Permissions.MANAGE_CHANNEL
+        )
         user.channel = ""
         session.commit()
 
 
 async def make_default(id):
     with db.Session() as session:
-        user = session.get(UserSchema, id)
-        user.permissions = permissions_to_db(Permissions.VIEW_CHANNEL)
+        user = session.get(UserModel, id)
+        user.permissions = to_binstr(Permissions.VIEW_CHANNEL)
         session.commit()
 
 
 async def make_moderator(id):
-    with db.Session() as session:
-        user = session.get(UserSchema, id)
-        user.permissions = \
-            permissions_to_db(
-                Permissions.VIEW_CHANNEL
-                | Permissions.MANAGE_CHANNEL)
-        session.commit()
+    with db.Session.begin() as session:
+        user = session.get(UserModel, id)
+        user.permissions = to_binstr(
+            Permissions.VIEW_CHANNEL | Permissions.MANAGE_CHANNEL
+        )
 
 
-def permissions_to_db(permissions: int) -> str:
-    permission_bits_len = 2 + math.floor(math.log(max(Permissions) + 1))
-    return str.zfill(bin(permissions)[2:],
-                     permission_bits_len)
-
-
-def add_user(login: str, role: str,
-             channel: str, permissions: Permissions):
+def add_user(login: str, role: str, channel: str, permissions: Permissions):
     init_password = generate_password()
 
-    user = UserSchema(
-                login=login,
-                role=role,
-                permissions=permissions_to_db(permissions),
-                password_hashed=pwdlib_hash(init_password),
-                channel=channel)
+    user = UserModel(
+        login=login,
+        role=role,
+        permissions=to_binstr(permissions),
+        password_hashed=pwdlib_hash(init_password),
+        channel=channel,
+    )
 
     with db.Session() as session:
         session.add(user)
@@ -151,8 +131,8 @@ def add_user(login: str, role: str,
     send_login_details(login, init_password)
 
 
-def user_by_login(login: str) -> UserSchema:
-    query = select(UserSchema).where(UserSchema.login == login)
+def user_by_login(value: str) -> UserModel:
+    query = select(UserModel).where(UserModel.login == value)
     data = db.Session().execute(query)
 
     try:
@@ -161,63 +141,29 @@ def user_by_login(login: str) -> UserSchema:
         raise HTTPException(404, "No user with such login found.")
 
 
-def get_user(id: int) -> UserModel:
+def get_user(id: int) -> UserSchema:
     try:
         with db.Session() as session:
-            user = session.get(UserSchema, id)
-        return user_from_schema(user)
+            user = cast(UserModel, session.get(UserSchema, id))
+        return to_user_schema(user)
     except NoResultFound:
-        raise HTTPException(status_code=404,
-                            detail=f"User (id={id}) not found")
+        raise HTTPException(status_code=404, detail=f"User (id={id}) not found")
 
 
-def create_admin_user():
-    random_password = generate_password()
-    create_channel(ChannelRequest(channel=""))
-
-    user = UserSchema(
-                id=0,
-                login=ADMIN_MAIL,
-                role="Администратор",
-                permissions=permissions_to_db(
-                    Permissions.ADMIN
-                    | Permissions.MANAGE_CHANNEL
-                    | Permissions.VIEW_CHANNEL
-                ),
-                password_hashed=pwdlib_hash(random_password),
-                channel="")
-
-
-    with db.Session() as session:
-        admin = session.get(UserSchema, 0)
-        if not admin:
-            session.add(user)
-
-        if admin and not admin.initialized:
-            session.delete(admin)
-            session.add(user)
-            
-            print(f"\n\033[33mRoot login --> {ADMIN_MAIL}")
-            print(f"\033[33mRoot password --> {random_password}")
-            print("(Pass to sysadmin to enter in the web interface to finish initialization)\033[0m\n")
-
-        session.commit()
-
-def get_by_channel(channel: str, page: int, page_size: int) -> List[UserModel]:
+def get_by_channel(channel: str, page: int, page_size: int) -> List[UserSchema]:
     users = []
 
     with db.Session() as session:
-        query = select(UserSchema)
+        query = select(UserModel)
         if channel != "":
-            query = query \
-                .where(UserSchema.channel == channel)
-        query = query.offset(page*page_size).limit(page_size)
+            query = query.where(UserModel.channel == channel)
+        query = query.offset(page * page_size).limit(page_size)
         users = session.scalars(query).all()
 
-    return [user_from_schema(user) for user in users]
+    return [to_user_schema(user) for user in users]
 
 
-def get_all_users() -> List[UserModel]:
+def get_all_users() -> List[UserSchema]:
     with db.Session() as session:
-        users = session.query(UserSchema).all()
-    return [user_from_schema(user) for user in users]
+        users = session.query(UserModel).all()
+    return [to_user_schema(user) for user in users]

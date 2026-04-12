@@ -1,37 +1,44 @@
-from ..database.db import Base
-from sqlalchemy.dialects.postgresql import BIT, JSONB
-from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy import String, Boolean, ForeignKey
-from ..models.users import Permissions, User as UserModel
-import math
-
-from ..schemas.news import News 
+from pydantic import BaseModel, ConfigDict
+from ..core.permissions import Permissions
 
 
-class User(Base):
-    __tablename__ = "users"
+class User(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
 
-    id: Mapped[int] = mapped_column(primary_key=True)
-    role: Mapped[str] = mapped_column(default="Студент")
+    id: int
+    login: str
+    initialized: bool
 
-    channel: Mapped[str] = \
-        mapped_column(ForeignKey("channels.name"))
-
-    permissions: Mapped[Permissions] = \
-        mapped_column(
-            BIT(1 + math.floor(math.log(1 + max(Permissions), 2)), False))
-
-    login: Mapped[str] = mapped_column(unique=True)
-    password_hashed: Mapped[str] = mapped_column(String())
-    initialized: Mapped[Boolean] = mapped_column(Boolean(), default=False)
-
-    data: Mapped[JSONB] = mapped_column(JSONB, default={})
-
-    news: Mapped["News"] = relationship(backref="user",
-                                        cascade="all, delete")
+    role: str
+    channel: str
+    permissions: Permissions
 
 
-def user_from_schema(user: User) -> UserModel:
-    user = user.__dict__
-    user["permissions"] = int(user["permissions"], 2)
-    return UserModel.model_validate(user)
+class UserCreate(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    login: str
+    role: str
+    channel: str
+
+
+class AdminCreate(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    login: str
+    role: str
+
+
+class Credentials(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    login: str
+    password: str
+
+
+class InitCredentials(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    login: str
+    init_password: str
+    new_password: str

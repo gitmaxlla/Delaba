@@ -1,40 +1,27 @@
-from pydantic import BaseModel
+from ..database.db import Base
+from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy import DateTime, func, ForeignKey
 import datetime
-from typing import List
+
+from ..schemas.news import News
 
 
-class Task(BaseModel):
-    id: int
-    createdAt: datetime.datetime
-    modifiedAt: datetime.datetime
-    type: str
-    channel: str
-    subject: str
-    title: str
+class Task(Base):
+    __tablename__ = "tasks"
 
-    deadline: datetime.datetime
-    subtasks: list | None
-    fileHash: str | None
+    id: Mapped[int] = mapped_column(primary_key=True)
+    createdAt: Mapped[datetime.datetime] = mapped_column(DateTime, default=func.now())
+    modifiedAt: Mapped[datetime.datetime] = mapped_column(DateTime, default=func.now())
 
+    type: Mapped[str] = mapped_column()
+    subject: Mapped[str] = mapped_column()
+    channel: Mapped[str] = mapped_column(ForeignKey("channels.name"))
 
-class DocumentTaskCreationRequest(BaseModel):
-    subject: str
-    title: str
-    channel: str
-    deadline: datetime.datetime
+    title: Mapped[str] = mapped_column()
+    deadline: Mapped[datetime.datetime] = mapped_column(DateTime, default=func.now())
 
+    fileHash: Mapped[str] = mapped_column(nullable=True)
+    subtasks: Mapped[JSONB] = mapped_column(JSONB, nullable=True)
 
-class TodoTaskCreationRequest(BaseModel):
-    subject: str
-    title: str
-    channel: str
-    deadline: datetime.datetime
-    subtasks: List[str]
-
-
-class TaskDeadline(BaseModel):
-    deadline: datetime.datetime
-
-
-class TaskTitle(BaseModel):
-    title: str
+    news: Mapped["News"] = relationship(backref="task", cascade="all, delete")

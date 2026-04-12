@@ -1,21 +1,32 @@
-from pwdlib import PasswordHash
-import jwt
-import uuid
 import datetime
-from time import time
-from collections import defaultdict
-from .config import ACCESS_SIGNATURE, REFRESH_SIGNATURE
 import secrets
 import string
+import uuid
+from collections import defaultdict
+from time import time
+
+import jwt
+from pwdlib import PasswordHash
+
 from .base import Singleton
+from .config import (
+    ACCESS_SIGNATURE,
+    ACCESS_TOKEN_EXPIRES_TIME_SEC,
+    REFRESH_SIGNATURE,
+    REFRESH_TOKEN_EXPIRES_TIME_SEC,
+    REQUESTS_PER_MINUTE_LIMIT,
+)
 
 
-DAY_SECS = 60 * 60 * 24
-REFRESH_TOKEN_EXPIRES_TIME_SEC = DAY_SECS * 20
-ACCESS_TOKEN_EXPIRES_TIME_SEC = 60
+# TODO: what's this class doing at all?
+class TokenPayload:
+    __slots__ = "id"
+
+    def __init__(self, id):
+        self.id = id
 
 
-def hash(value: str):
+def hash(value: str) -> str:
     return PasswordHash.recommended().hash(value)
 
 
@@ -23,12 +34,12 @@ def validate_hash(value: str, hash: str) -> bool:
     return PasswordHash.recommended().verify(value, hash)
 
 
-def generate_password(length = 16):
+def generate_password(length=16) -> str:
     charset = string.ascii_letters + string.digits
-    return ''.join([secrets.choice(charset) for i in range(length)])
+    return "".join([secrets.choice(charset) for i in range(length)])
 
 
-def generate_uuid():
+def generate_uuid() -> str:
     return str(uuid.uuid4())
 
 
@@ -36,11 +47,10 @@ def generate_access_token(id: int) -> str:
     access_payload = {
         "id": id,
         "exp": int(time()) + ACCESS_TOKEN_EXPIRES_TIME_SEC,
-        "type": "access"
+        "type": "access",
     }
 
-    access_token = jwt.encode(access_payload,
-                              ACCESS_SIGNATURE, algorithm="HS256")
+    access_token = jwt.encode(access_payload, ACCESS_SIGNATURE, algorithm="HS256")
 
     return access_token
 
@@ -49,10 +59,9 @@ def generate_refresh_token(id: int) -> str:
     refresh_payload = {
         "id": id,
         "exp": int(time()) + REFRESH_TOKEN_EXPIRES_TIME_SEC,
-        "type": "refresh"
+        "type": "refresh",
     }
-    refresh_token = jwt.encode(refresh_payload,
-                               REFRESH_SIGNATURE, algorithm="HS256")
+    refresh_token = jwt.encode(refresh_payload, REFRESH_SIGNATURE, algorithm="HS256")
 
     return refresh_token
 
@@ -66,20 +75,19 @@ def get_refresh_payload(token: str) -> dict:
 
 
 class RateLimiter(metaclass=Singleton):
-    def __init__(self, per_minute=300):
+    def __init__(self, per_minute=REQUESTS_PER_MINUTE_LIMIT):
         self.requests_counter = defaultdict(int)
         self.requests_started = defaultdict(datetime.datetime.now)
         self.per_minute = per_minute
 
-    def exceeded(self, clientID):
-        time_delta = \
-            datetime.datetime.now() - self.requests_started[clientID]
-        self.requests_counter[clientID] += 1
+    def exceeded(self, client_id) -> float:
+        time_delta = datetime.datetime.now() - self.requests_started[client_id]
+        self.requests_counter[client_id] += 1
 
         if time_delta.total_seconds() >= 60:
-            self.requests_started[clientID] = datetime.datetime.now()
-            self.requests_counter[clientID] = 0
-        elif self.requests_counter[clientID] > self.per_minute:
+            self.requests_started[client_id] = datetime.datetime.now()
+            self.requests_counter[client_id] = 0
+        elif self.requests_counter[client_id] > self.per_minute:
             return 60 - time_delta.total_seconds()
 
         return 0

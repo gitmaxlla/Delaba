@@ -1,35 +1,23 @@
-from pydantic import BaseModel
+from ..database.db import Base
+from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy import DateTime, func, ForeignKey
+
 import datetime
 
 
-class News(BaseModel):
-    id: int
-    section: str
-    channel: str
-    title: str
-    by: int
-    bound_task_id: int | None
+class News(Base):
+    __tablename__ = "news"
 
-    postedAt: datetime.datetime
-    modifiedAt: datetime.datetime
-    message: str
+    id: Mapped[int] = mapped_column(primary_key=True)
+    section: Mapped[str] = mapped_column(nullable=True)
+    channel: Mapped[str] = mapped_column(ForeignKey("channels.name"))
 
+    postedAt: Mapped[datetime.datetime] = mapped_column(DateTime, default=func.now())
 
-class NewsCreationRequest(BaseModel):
-    section: str
-    channel: str
-    title: str
-    bound_task_id: int | None = None
-    message: str
+    modifiedAt: Mapped[datetime.datetime] = mapped_column(DateTime, default=func.now())
 
+    by: Mapped[int] = mapped_column(ForeignKey("users.id"))
+    bound_task_id: Mapped[int] = mapped_column(ForeignKey("tasks.id"), nullable=True)
 
-class NewsTitle(BaseModel):
-    title: str
-
-
-class NewsMessage(BaseModel):
-    message: str
-
-
-class NewsSection(BaseModel):
-    section: str
+    title: Mapped[str] = mapped_column()
+    message: Mapped[str] = mapped_column()

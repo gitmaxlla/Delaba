@@ -1,32 +1,34 @@
-from fastapi import APIRouter, Response, \
-                    Depends, HTTPException, Request
+from fastapi import APIRouter, Response, Depends, HTTPException, Request
 from fastapi.security import HTTPBearer
-from ..models.users import User, Permissions, Credentials, InitCredentials, \
-                           has_admin_rights, has_moderator_rights, banned
+from src.schemas.users import Credentials, InitCredentials
+from src.models.users import User
+from src.core.permissions import (
+    has_admin_rights,
+    has_moderator_rights,
+    banned,
+)
 from jwt import ExpiredSignatureError
-from ..core.security import validate_hash, \
-                            generate_access_token, \
-                            generate_refresh_token, \
-                            get_access_payload, \
-                            get_refresh_payload
-from ..services.users import update_user_password, \
-                             user_by_login, \
-                             mark_user_initialized, \
-                             user_from_schema, \
-                             get_user as get_user_model
-from ..services.tasks import get_task as get_task_model
-from ..services.news import get_news_id as get_news_model
-from sqlalchemy.exc import NoResultFound
+from src.core.security import (
+    validate_hash,
+    generate_access_token,
+    generate_refresh_token,
+    get_access_payload,
+    get_refresh_payload,
+    TokenPayload,
+)
+from src.services.users import (
+    update_user_password,
+    user_by_login,
+    mark_user_initialized,
+    get_user as get_user_model,
+)
+from src.services.tasks import get_task as get_task_model
+from src.services.news import get_news_id as get_news_model
+from src.adapters.sqlalchemy_pydantic import to_user_schema
+
 
 v1_router = APIRouter(prefix="/auth", tags=["auth"])
 auth_scheme = HTTPBearer()
-
-
-class TokenPayload:
-    __slots__ = ("id")
-
-    def __init__(self, id):
-        self.id = id
 
 
 def require_access(request: Request) -> User:
@@ -61,20 +63,20 @@ def require_refresh(request: Request) -> User:
     id = int(credentials["id"])
     user = get_user_model(id)
 
-    if banned(user):
+    if banned(user.permissions):
         raise HTTPException(403, "User is currently under ban.")
 
     return user
 
 
 @v1_router.post("/init", tags=["auth"])
-async def initialize_user(credentials: InitCredentials,
-                          response: Response) -> None:
+async def initialize_user(credentials: InitCredentials, response: Response) -> None:
     user = user_by_login(credentials.login)
     if user.initialized:
-        raise HTTPException(403, "User password has already "
-                                 "been changed after account creation.")
- 
+        raise HTTPException(
+            403, "User password has already been changed after account creation."
+        )
+
     print(credentials.init_password, user.password_hashed)
     if validate_hash(credentials.init_password, user.password_hashed):
         print(1)
@@ -86,11 +88,10 @@ async def initialize_user(credentials: InitCredentials,
 
 
 @v1_router.post("/login", tags=["auth"])
-async def authenticate_user(
-        credentials: Credentials, response: Response) -> None:
+async def authenticate_user(credentials: Credentials, response: Response) -> None:
     user: User = user_by_login(credentials.login)
 
-    if banned(user_from_schema(user)):
+    if banned(to_user_schema(user)):
         raise HTTPException(403, "User is banned.")
 
     if validate_hash(credentials.password, user.password_hashed):
@@ -112,26 +113,25 @@ async def logout_user(response: Response) -> None:
 
 
 @v1_router.post("/refresh", tags=["auth"])
-async def refresh_access_token(response: Response,
-                               user: User = Depends(require_refresh)) -> None:
+async def refresh_access_token(
+    response: Response, user: User = Depends(require_refresh)
+) -> None:
     if not user.initialized:
         raise HTTPException(400, "Current user is not yet initialized.")
 
     response.set_cookie(
-        key="access",
-        value=generate_access_token(user.id),
-        httponly=True
+        key="access", value=generate_access_token(user.id), httponly=True
     )
 
 
 def set_tokens(payload: TokenPayload, response: Response) -> None:
     response.set_cookie(
-        key="refresh", httponly=True,
-        value=generate_refresh_token(payload.id))
+        key="refresh", httponly=True, value=generate_refresh_token(payload.id)
+    )
 
     response.set_cookie(
-        key="access", httponly=True,
-        value=generate_access_token(payload.id))
+        key="access", httponly=True, value=generate_access_token(payload.id)
+    )
 
 
 def logged_in(user: User = Depends(require_access)) -> User:
@@ -139,22 +139,24 @@ def logged_in(user: User = Depends(require_access)) -> User:
 
 
 def moderator(user: User = Depends(logged_in)) -> User:
-    if not has_admin_rights(user) and not has_moderator_rights(user):
+    if not has_admin_rights(user.permissions) and not has_moderator_rights(
+        user.permissions
+    ):
         raise HTTPException(403, "Insufficient rights.")
     return user
 
 
 def admin(user: User = Depends(logged_in)) -> User:
-    if not has_admin_rights(user):
+    if not has_admin_rights(user.permissions):
         raise HTTPException(403, "Insufficient rights.")
     return user
 
 
-def owns_channel(user: User = Depends(moderator)) -> str:
+def owns_channel(user: User = Depends(moderator)) -> str | None:
     res = None
-    if has_admin_rights(user):
+    if has_admin_rights(user.permissions):
         res = ""
-    elif has_moderator_rights(user):
+    elif has_moderator_rights(user.permissions):
         res = user.channel
     return res
 
@@ -163,8 +165,10 @@ def manages_user_id(id: int, user: User = Depends(moderator)) -> User:
     if id == user.id:
         raise HTTPException(403, "Cannot manage themselves.")
 
-    if (not has_admin_rights(user)
-       and get_user_model(id).channel != user.channel):
+    if (
+        not has_admin_rights(user.permissions)
+        and get_user_model(id).channel != user.channel
+    ):
         raise HTTPException(403, "Insufficient rights.")
 
     return user
@@ -172,14 +176,15 @@ def manages_user_id(id: int, user: User = Depends(moderator)) -> User:
 
 def task_id_reachable(id: int, user: User = Depends(logged_in)) -> User:
     task = get_task_model(id)
-    if not has_admin_rights(user) \
-       and task.channel != user.channel:
+    if not has_admin_rights(user.permissions) and task.channel != user.channel:
         raise HTTPException(403, "Insufficient rights.")
     return user
 
 
 def news_id_reachable(id: int, user: User = Depends(logged_in)) -> User:
-    if not has_admin_rights(user) \
-       and get_news_model(id).channel != user.channel:
+    if (
+        not has_admin_rights(user.permissions)
+        and get_news_model(id).channel != user.channel
+    ):
         raise HTTPException(403, "Insufficient rights.")
     return user
