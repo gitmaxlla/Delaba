@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from src.schemas.channels import ChannelCreate
 from src.schemas.users import (
     AdminCreate,
-    Permissions,
+    PermissionTags,
     User,
     UserCreate,
 )
@@ -21,12 +21,12 @@ v1_router = APIRouter(prefix="/users", tags=["users"])
 
 @v1_router.get("/data", response_model=dict)
 def get_user_data(user: User = Depends(logged_in)):
-    return users.get_user_data(user)
+    return users.get_user_data(user.id)
 
 
 @v1_router.get("/permissions", response_model=int)
 def get_self_permissions(user: User = Depends(logged_in)):
-    return users.get_user_permissions(user.permissions)
+    return users.get_user_permissions(user.id)
 
 
 @v1_router.get("/", response_model=List[UserModel])
@@ -45,7 +45,7 @@ def get_user(id):
 
 @v1_router.get("/{id}/data", response_model=dict)
 def get_user_data_by_id(id, _: User = Depends(admin)):
-    return users.get_user_data(users.get_user(id))
+    return users.get_user_data(id)
 
 
 @v1_router.put("/data")
@@ -59,7 +59,7 @@ def add_moderator(request: UserCreate, _: UserModel = Depends(admin)):
         login=request.login,
         role=request.role,
         channel=request.channel,
-        permissions=(Permissions.MANAGE_CHANNEL & Permissions.VIEW_CHANNEL),
+        permissions=(PermissionTags.MANAGE_CHANNEL & PermissionTags.VIEW_CHANNEL),
     )
 
 
@@ -70,7 +70,9 @@ def add_admin(request: AdminCreate, _: UserModel = Depends(admin)):
         role=request.role,
         channel="",
         permissions=(
-            Permissions.MANAGE_CHANNEL & Permissions.VIEW_CHANNEL & Permissions.ADMIN
+            PermissionTags.MANAGE_CHANNEL
+            & PermissionTags.VIEW_CHANNEL
+            & PermissionTags.ADMIN
         ),
     )
 
@@ -87,7 +89,7 @@ def add_user(request: UserCreate, owns_channel: str = Depends(owns_channel)):
         login=request.login,
         role=request.role,
         channel=request.channel,
-        permissions=Permissions.VIEW_CHANNEL,
+        permissions=PermissionTags.VIEW_CHANNEL,
     )
 
 

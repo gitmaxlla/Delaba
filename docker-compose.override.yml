@@ -1,21 +1,20 @@
 services:
   backend:
     volumes:
-      - type: bind
-        source: ./backend/src/
-        target: /backend/src/
+      - ./backend/src/:/backend/src/:Z
+      - ./backend/run.py:/backend/run.py:Z
     build:
       target: development
     environment:
-      - DEV_MODE=1
+      - DEV_MODE=true
     ports:
       - "8000:8000"
 
   frontend:
     volumes:
-      - type: bind
-        source: ./frontend/app/
-        target: /frontend/app/
+      - ./frontend/app/:/frontend/app/:Z
+      - /frontend/app/node_modules
+      - /frontend/app/.react-router
     ports:
       - "5173:5173"
     build:

@@ -1,7 +1,6 @@
 from fastapi import APIRouter, Response, Depends, HTTPException, Request
 from fastapi.security import HTTPBearer
-from src.schemas.users import Credentials, InitCredentials
-from src.models.users import User
+from src.schemas.users import Credentials, InitCredentials, User
 from src.core.permissions import (
     has_admin_rights,
     has_moderator_rights,
@@ -9,7 +8,6 @@ from src.core.permissions import (
 )
 from jwt import ExpiredSignatureError
 from src.core.security import (
-    validate_hash,
     generate_access_token,
     generate_refresh_token,
     get_access_payload,
@@ -18,13 +16,12 @@ from src.core.security import (
 )
 from src.services.users import (
     update_user_password,
-    user_by_login,
+    log_in,
     mark_user_initialized,
-    get_user as get_user_model,
+    get_user,
 )
 from src.services.tasks import get_task as get_task_model
 from src.services.news import get_news_id as get_news_model
-from src.adapters.sqlalchemy_pydantic import to_user_schema
 
 
 v1_router = APIRouter(prefix="/auth", tags=["auth"])
@@ -39,7 +36,7 @@ def require_access(request: Request) -> User:
 
         credentials = get_access_payload(token)
 
-        return get_user_model(credentials["id"])
+        return get_user(credentials["id"])
     except ExpiredSignatureError:
         raise HTTPException(401, "Access token expired.")
     except Exception:
@@ -61,7 +58,7 @@ def require_refresh(request: Request) -> User:
         raise HTTPException(401, "Refresh token is invalid.")
 
     id = int(credentials["id"])
-    user = get_user_model(id)
+    user = get_user(id)
 
     if banned(user.permissions):
         raise HTTPException(403, "User is currently under ban.")
@@ -71,30 +68,28 @@ def require_refresh(request: Request) -> User:
 
 @v1_router.post("/init", tags=["auth"])
 async def initialize_user(credentials: InitCredentials, response: Response) -> None:
-    user = user_by_login(credentials.login)
+    user, success = log_in(credentials.login, credentials.init_password)
     if user.initialized:
         raise HTTPException(
             403, "User password has already been changed after account creation."
         )
 
-    print(credentials.init_password, user.password_hashed)
-    if validate_hash(credentials.init_password, user.password_hashed):
-        print(1)
+    if success:
         update_user_password(user.id, credentials.new_password)
         mark_user_initialized(user.id)
         set_tokens(TokenPayload(user.id), response)
-        return
-    raise HTTPException(401, "Provided init token is not valid.")
+    else:
+        raise HTTPException(401, "Provided init token is not valid.")
 
 
 @v1_router.post("/login", tags=["auth"])
 async def authenticate_user(credentials: Credentials, response: Response) -> None:
-    user: User = user_by_login(credentials.login)
+    user, success = log_in(credentials.login, credentials.password)
 
-    if banned(to_user_schema(user)):
+    if banned(user.permissions):
         raise HTTPException(403, "User is banned.")
 
-    if validate_hash(credentials.password, user.password_hashed):
+    if success:
         if user.initialized:
             set_tokens(TokenPayload(user.id), response)
         else:
@@ -165,10 +160,7 @@ def manages_user_id(id: int, user: User = Depends(moderator)) -> User:
     if id == user.id:
         raise HTTPException(403, "Cannot manage themselves.")
 
-    if (
-        not has_admin_rights(user.permissions)
-        and get_user_model(id).channel != user.channel
-    ):
+    if not has_admin_rights(user.permissions) and get_user(id).channel != user.channel:
         raise HTTPException(403, "Insufficient rights.")
 
     return user

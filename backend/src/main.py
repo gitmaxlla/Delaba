@@ -35,7 +35,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://127.0.0.1:5173", "http://127.0.0.1"]
     if DEV_MODE
-    else ["" if ALLOWED_HOSTNAME is None else ALLOWED_HOSTNAME],
+    else [ALLOWED_HOSTNAME],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

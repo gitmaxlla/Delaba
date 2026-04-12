@@ -1,18 +1,16 @@
-from typing import List, cast
+from typing import Any, List, Optional
 
-from src.database import db
-from src.models.users import User as UserModel
-from src.schemas.users import User as UserSchema
-
-from src.services.mail import send_login_details
-from src.core.security import hash as pwdlib_hash, generate_password
-from src.core.permissions import Permissions, to_binstr
-from src.adapters.sqlalchemy_pydantic import to_user_schema
-
+from fastapi import HTTPException
 from sqlalchemy import select
 from sqlalchemy.exc import NoResultFound
 
-from fastapi import HTTPException
+from src.core.permissions import PermissionTags
+from src.core.security import generate_password, validate_hash
+from src.core.security import hash as pwdlib_hash
+from src.database import db
+from src.models.users import User as UserModel
+from src.schemas.users import User as UserSchema
+from src.services.mail import send_login_details
 
 
 def delete_user(id: int):
@@ -28,23 +26,20 @@ def update_user_data(id: int, data: dict):
             user.data = data
 
 
-def get_user_permissions(id: int) -> int:
+def get_user_permissions(id: int) -> Optional[PermissionTags]:
     with db.Session() as session:
         user = session.get(UserModel, id)
-        session.commit()
-        session.refresh(user)
-
         if user:
-            return int(user.permissions, 2)
-        return 0
+            return user.permissions
+        return None
 
 
-def get_user_data(id: int) -> dict:
+def get_user_data(id: int) -> dict[str, Any]:
     data = {}
 
     with db.Session() as session:
         user = session.get(UserModel, id)
-        if user:
+        if user and user.data:
             data = user.data.__dict__
 
     return data
@@ -53,71 +48,76 @@ def get_user_data(id: int) -> dict:
 def update_user_password(id, new_password):
     with db.Session.begin() as session:
         user = session.get(UserModel, id)
-        user.password_hashed = pwdlib_hash(new_password)
+        if user:
+            user.password_hashed = pwdlib_hash(new_password)
 
 
 def mark_user_initialized(id):
     with db.Session.begin() as session:
         user = session.get(UserModel, id)
-        user.initialized = True
+        if user:
+            user.initialized = True
 
 
 async def ban_user(id):
     if id == 0:
         return
 
-    with db.Session() as session:
+    with db.Session.begin() as session:
         user = session.get(UserModel, id)
-        user.permissions = to_binstr(int(user.permissions, 2) & Permissions.BANNED)
-        session.commit()
+        if user:
+            user.permissions = user.permissions & PermissionTags.BANNED
 
 
 async def transfer_user(id: int, channel: str):
-    with db.Session() as session:
+    with db.Session.begin() as session:
         user = session.get(UserModel, id)
-        user.channel = channel
-        session.commit()
+        if user:
+            user.channel = channel
 
 
 async def unban_user(id):
-    with db.Session() as session:
+    with db.Session.begin() as session:
         user = session.get(UserModel, id)
-        user.permissions = to_binstr(int(user.permissions, 2) & (~Permissions.BANNED))
-        session.commit()
+        if user:
+            user.permissions = user.permissions & (~PermissionTags.BANNED)
 
 
 async def make_admin(id):
-    with db.Session() as session:
+    with db.Session.begin() as session:
         user = session.get(UserModel, id)
-        user.permissions = to_binstr(
-            Permissions.VIEW_CHANNEL | Permissions.ADMIN | Permissions.MANAGE_CHANNEL
-        )
-        user.channel = ""
-        session.commit()
+        if user:
+            user.channel = ""
+            user.permissions = (
+                PermissionTags.VIEW_CHANNEL
+                | PermissionTags.ADMIN
+                | PermissionTags.MANAGE_CHANNEL
+            )
 
 
 async def make_default(id):
-    with db.Session() as session:
+    with db.Session.begin() as session:
         user = session.get(UserModel, id)
-        user.permissions = to_binstr(Permissions.VIEW_CHANNEL)
-        session.commit()
+        if user:
+            user.permissions = PermissionTags.VIEW_CHANNEL
 
 
 async def make_moderator(id):
     with db.Session.begin() as session:
         user = session.get(UserModel, id)
-        user.permissions = to_binstr(
-            Permissions.VIEW_CHANNEL | Permissions.MANAGE_CHANNEL
-        )
+        if user:
+            user.permissions = (
+                PermissionTags.VIEW_CHANNEL | PermissionTags.MANAGE_CHANNEL
+            )
 
 
-def add_user(login: str, role: str, channel: str, permissions: Permissions):
+def add_user(login: str, role: str, channel: str, permissions: PermissionTags):
     init_password = generate_password()
 
     user = UserModel(
         login=login,
         role=role,
-        permissions=to_binstr(permissions),
+        permissions=permissions,
         password_hashed=pwdlib_hash(init_password),
         channel=channel,
     )
@@ -131,21 +131,23 @@ def add_user(login: str, role: str, channel: str, permissions: Permissions):
     send_login_details(login, init_password)
 
 
-def user_by_login(value: str) -> UserModel:
-    query = select(UserModel).where(UserModel.login == value)
+def log_in(login: str, password: str) -> tuple[UserSchema, bool]:
+    query = select(UserModel).where(UserModel.login == login)
     data = db.Session().execute(query)
-
     try:
-        return data.scalar_one()
+        user = data.scalar_one()
+        success = validate_hash(password, user.password_hashed)
+        return UserSchema.model_validate(user), success
     except NoResultFound:
         raise HTTPException(404, "No user with such login found.")
 
 
-def get_user(id: int) -> UserSchema:
+def get_user(id: int) -> Optional[UserSchema]:
     try:
         with db.Session() as session:
-            user = cast(UserModel, session.get(UserSchema, id))
-        return to_user_schema(user)
+            user = session.get(UserModel, id)
+            if user:
+                return UserSchema.model_validate(user)
     except NoResultFound:
         raise HTTPException(status_code=404, detail=f"User (id={id}) not found")
 
@@ -160,10 +162,10 @@ def get_by_channel(channel: str, page: int, page_size: int) -> List[UserSchema]:
         query = query.offset(page * page_size).limit(page_size)
         users = session.scalars(query).all()
 
-    return [to_user_schema(user) for user in users]
+    return [UserSchema.model_validate(user) for user in users]
 
 
 def get_all_users() -> List[UserSchema]:
     with db.Session() as session:
         users = session.query(UserModel).all()
-    return [to_user_schema(user) for user in users]
+        return [UserSchema.model_validate(user) for user in users]

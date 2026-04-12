@@ -49,3 +49,17 @@ class NewsSectionUpdate(BaseModel):
 
 class NewsResponse(NewsBase):
     by: str
+
+
+def to_news_response(news: News, by: str) -> NewsResponse:
+    return NewsResponse(
+        id=news.id,
+        channel=news.channel,
+        section=news.section,
+        title=news.title,
+        message=news.message,
+        bound_task_id=news.bound_task_id,
+        postedAt=news.postedAt,
+        modifiedAt=news.modifiedAt,
+        by=by,
+    )

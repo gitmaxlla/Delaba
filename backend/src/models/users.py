@@ -1,12 +1,11 @@
-import math
 from typing import Any
 
-from sqlalchemy import Boolean, ForeignKey, String
-from sqlalchemy.dialects.postgresql import BIT, JSONB
+from sqlalchemy import ForeignKey, String
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.core.config import DEFAULT_ROLE
-from src.core.permissions import Permissions
+from src.core.permissions import PermissionTags, Permissions
 from src.database.db import Base
 from src.schemas.news import News
 
@@ -19,14 +18,11 @@ class User(Base):
 
     channel: Mapped[str] = mapped_column(ForeignKey("channels.name"))
 
-    # TODO: Manage all permissions with TypeDeclaration instead of this mess
-    permissions: Mapped[str] = mapped_column(
-        BIT(1 + math.floor(math.log(1 + max(Permissions), 2)), False)
-    )
+    permissions: Mapped[PermissionTags] = mapped_column(Permissions())
 
     login: Mapped[str] = mapped_column(unique=True)
     password_hashed: Mapped[str] = mapped_column(String())
-    initialized: Mapped[Boolean] = mapped_column(Boolean(), default=False)
+    initialized: Mapped[bool] = mapped_column(default=False)
 
     data: Mapped[dict[str, Any]] = mapped_column(JSONB, default={})
 

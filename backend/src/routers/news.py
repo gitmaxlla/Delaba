@@ -8,6 +8,8 @@ from src.schemas.news import (
     NewsMessageUpdate,
     NewsTitleUpdate,
     NewsSectionUpdate,
+    NewsResponse,
+    to_news_response,
 )
 
 from ..services.users import get_user
@@ -30,12 +32,15 @@ def add_news(
 
 
 @v1_router.get("/")
-def get_news(user: User = Depends(logged_in)):
+def get_news(user: User = Depends(logged_in)) -> list[NewsResponse]:
     fetched_news = news.get_news(user.channel)
+    response: list[NewsResponse] = []
     for news_ in fetched_news:
-        user = get_user(news_.by)
-        news_.by = user.role
-    return fetched_news
+        if news_:
+            user_ = get_user(news_.by)
+            if user_:
+                response.append(to_news_response(news_, user_.role))
+    return response
 
 
 @v1_router.get("/{id}")

@@ -1,5 +1,5 @@
 from src.core.config import ADMIN_MAIL
-from src.core.permissions import Permissions, permissions_to_db
+from src.core.permissions import PermissionTags
 from src.core.security import generate_password
 from src.core.security import hash as pwdlib_hash
 from src.database import db
@@ -17,10 +17,10 @@ class __Manager:
             id=0,
             login=ADMIN_MAIL,
             role="Администратор",
-            permissions=permissions_to_db(
-                Permissions.ADMIN
-                | Permissions.MANAGE_CHANNEL
-                | Permissions.VIEW_CHANNEL
+            permissions=(
+                PermissionTags.ADMIN
+                | PermissionTags.MANAGE_CHANNEL
+                | PermissionTags.VIEW_CHANNEL
             ),
             password_hashed=pwdlib_hash(random_password),
             channel="",

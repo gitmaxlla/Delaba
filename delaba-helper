@@ -1,0 +1,85 @@
+#! /usr/bin/env python3
+import sys
+import os
+import secrets
+from dataclasses import dataclass
+
+
+@dataclass
+class DotenvEntry:
+    default_value: str
+    description: str = ""
+
+
+OPERATIONS: list[str] = ["build-dotenv", "dev", "prod", "test"]
+CONFIG_FIELDS: dict[str, DotenvEntry] = {
+    "POSTGRES_DB": DotenvEntry("delaba"),
+    "POSTGRES_USER": DotenvEntry("admin"),
+    "POSTGRES_PASSWORD": DotenvEntry("delaba-admin"),
+    "POSTGRES_ADDRESS": DotenvEntry("relational-db"),
+    "POSTGRES_PORT": DotenvEntry("5432"),
+    "SQLALCHEMY_ECHO": DotenvEntry("false", "should SQAlchemy logs be verbose?"),
+    "ALLOWED_HOSTNAME": DotenvEntry("delaba.ru", "website's domain name to allow CORS"),
+    "JWT_REFRESH_SECRET": DotenvEntry(
+        str(secrets.token_urlsafe(32)), "default is a randomly generated string."
+    ),
+    "JWT_ACCESS_SECRET": DotenvEntry(
+        str(secrets.token_urlsafe(32)), "default is a randomly generated string."
+    ),
+    "DELABA_MAIL": DotenvEntry(
+        "mail@delaba.ru",
+        "mail address to used to sent users confirmation emails upon registration.",
+    ),
+    "ADMIN_MAIL": DotenvEntry("admin@delaba.ru", "admin user's login."),
+    "SMTP_HOSTNAME": DotenvEntry("mail-server"),
+    "SMTP_PORT": DotenvEntry("1025"),
+    "MINIO_HOSTNAME": DotenvEntry("object-storage"),
+    "MINIO_PORT": DotenvEntry("9000"),
+    "MINIO_ROOT_USER": DotenvEntry("admin"),
+    "MINIO_ROOT_PASSWORD": DotenvEntry("delaba-admin"),
+    "MINIO_DEFAULT_BUCKET": DotenvEntry("delaba"),
+}
+
+
+def build_dotenv():
+    params: list[str] = []
+    n = 1
+
+    for name, entry in CONFIG_FIELDS.items():
+        if entry.description != "":
+            print(f"\n{entry.description}")
+        else:
+            print()
+
+        print(f"[{n}/{len(CONFIG_FIELDS)}] {name} [{entry.default_value}]: ", end="")
+
+        value = input()
+        if value == "":
+            value = entry.default_value
+        params.append(f"{name}={value}")
+        n += 1
+
+    with open(".env", "w", newline="") as f:
+        f.write("\n".join(params))
+    print("Resulting .env saved in current directory.")
+
+
+if __name__ == "__main__":
+    if len(sys.argv) == 1 or len(sys.argv) > 2 or sys.argv[1] not in OPERATIONS:
+        print(f"Supported operations: {str(OPERATIONS)}")
+    else:
+        match sys.argv[1]:
+            case "dev":
+                print("Run in shell: sudo docker compose up")
+            case "prod":
+                print("Run in shell: sudo docker compose -f docker-compose.yml up")
+            case "test":
+                raise NotImplementedError
+            case "build-dotenv":
+                if os.path.exists(".env"):
+                    print(
+                        "There is already .env in root directory. Please move/rename the file to avoid data loss."
+                    )
+                    exit(-1)
+                else:
+                    build_dotenv()

@@ -12,7 +12,6 @@ from src.core.permissions import has_admin_rights
 from src.core.exceptions import RootEntityViolationError
 from src.database import db
 from src.models.channels import Channel
-from src.adapters.sqlalchemy_pydantic import to_user_schema
 
 
 def users_by_channel(channel: str) -> list[UserSchema]:
@@ -20,7 +19,7 @@ def users_by_channel(channel: str) -> list[UserSchema]:
 
     with db.Session.begin() as session:
         users = [
-            to_user_schema(x)
+            UserSchema.model_validate(x)
             for x in list(
                 session.scalars(
                     select(UserModel).where(UserModel.channel == channel)

@@ -1,5 +1,5 @@
 from pydantic import BaseModel, ConfigDict
-from ..core.permissions import Permissions
+from ..core.permissions import PermissionTags
 
 
 class User(BaseModel):
@@ -11,7 +11,7 @@ class User(BaseModel):
 
     role: str
     channel: str
-    permissions: Permissions
+    permissions: PermissionTags
 
 
 class UserCreate(BaseModel):
