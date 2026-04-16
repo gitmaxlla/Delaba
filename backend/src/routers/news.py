@@ -5,9 +5,7 @@ from ..services.auth import logged_in, owns_channel, moderator, news_id_reachabl
 from src.schemas.users import User
 from src.schemas.news import (
     NewsCreate,
-    NewsMessageUpdate,
-    NewsTitleUpdate,
-    NewsSectionUpdate,
+    NewsUpdate,
     NewsResponse,
     to_news_response,
 )
@@ -53,22 +51,13 @@ def delete_task(id: int, _: User = Depends(news_id_reachable)):
     news.delete_news(id)
 
 
-@v1_router.patch("/{id}/title")
-def change_news_title(
-    id: int, request: NewsTitleUpdate, _: User = Depends(news_id_reachable)
+@v1_router.patch("/{id}")
+def update_news_by_id(
+    id: int, request: NewsUpdate, _: User = Depends(news_id_reachable)
 ):
-    news.change_news_title(id, request.title)
-
-
-@v1_router.patch("/{id}/message")
-def change_news_message(
-    id: int, request: NewsMessageUpdate, _: User = Depends(news_id_reachable)
-):
-    news.change_news_message(id, request.message)
-
-
-@v1_router.patch("/{id}/section")
-def change_news_section(
-    id: int, request: NewsSectionUpdate, _: User = Depends(news_id_reachable)
-):
-    news.change_news_section(id, request.section)
+    if request.title:
+        news.change_news_title(id, request.title)
+    if request.message:
+        news.change_news_message(id, request.message)
+    if request.section:
+        news.change_news_section(id, request.section)

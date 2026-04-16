@@ -1,7 +1,8 @@
+import math
 from typing import Any, List, Optional
 
 from fastapi import HTTPException
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.exc import NoResultFound
 
 from src.core.permissions import PermissionTags
@@ -9,7 +10,7 @@ from src.core.security import generate_password, validate_hash
 from src.core.security import hash as pwdlib_hash
 from src.database import db
 from src.models.users import User as UserModel
-from src.schemas.users import User as UserSchema
+from src.schemas.users import User as UserSchema, UsersPaginatedResponse
 from src.services.mail import send_login_details
 
 
@@ -40,7 +41,7 @@ def get_user_data(id: int) -> dict[str, Any]:
     with db.Session() as session:
         user = session.get(UserModel, id)
         if user and user.data:
-            data = user.data.__dict__
+            data = user.data
 
     return data
 
@@ -152,17 +153,53 @@ def get_user(id: int) -> Optional[UserSchema]:
         raise HTTPException(status_code=404, detail=f"User (id={id}) not found")
 
 
-def get_by_channel(channel: str, page: int, page_size: int) -> List[UserSchema]:
-    users = []
+def get(
+    channel: list[str],
+    role: list[str] | None,
+    permissions: list[int] | None,
+    q: str | None,
+    email: str | None,
+    newest_first: bool | None,
+    page: int,
+    page_size: int,
+) -> UsersPaginatedResponse:
+    users: list[UserSchema] = []
 
     with db.Session() as session:
-        query = select(UserModel)
-        if channel != "":
-            query = query.where(UserModel.channel == channel)
-        query = query.offset(page * page_size).limit(page_size)
-        users = session.scalars(query).all()
+        query = select(UserModel).order_by(
+            UserModel.id.asc() if newest_first else UserModel.id.desc()
+        )
 
-    return [UserSchema.model_validate(user) for user in users]
+        if q and q != "":
+            query = query.where(
+                UserModel.login.ilike(f"%{q}%") | UserModel.role.ilike(f"%{q}%")
+            )
+
+        query = query.where(UserModel.channel.in_(channel))
+
+        if email:
+            query = query.where(UserModel.login == email)
+
+        if role:
+            query = query.where(UserModel.role.in_(role))
+
+        if permissions:
+            query = query.where(UserModel.permissions.in_(permissions))
+
+        count_q = select(func.count()).select_from(query.subquery())
+        count = session.execute(count_q).scalar()
+        if not count:
+            count = 0
+        total = count
+
+        query = query.slice(page * page_size, (page + 1) * page_size)
+        user_models = session.scalars(query).all()
+        users = [UserSchema.model_validate(user) for user in user_models]
+
+        return UsersPaginatedResponse(
+            values=users,
+            total=int(total),
+        )
 
 
 def get_all_users() -> List[UserSchema]:

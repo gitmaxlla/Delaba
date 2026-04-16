@@ -12,8 +12,7 @@ from src.database.obj import get_default_bucket
 from src.schemas.tasks import (
     DocumentTaskCreate,
     Task,
-    TaskDeadlineUpdate,
-    TaskTitleUpdate,
+    TaskUpdate,
     TodoTaskCreate,
 )
 from src.schemas.users import User
@@ -46,7 +45,8 @@ async def add_document_task(
     channel: Annotated[str, Form()] = "",
     owns_channel: str = Depends(owns_channel),
 ):
-    # TODO: if not file.size then exception
+    if not file.size:
+        raise HTTPException(422, "File size cannot be read by the server.")
     if file.size and file.size > FILE_UPLOAD_LIMIT_BYTES:
         raise HTTPException(413, "File upload limit has been exceeded (20 MB).")
 
@@ -102,15 +102,11 @@ def delete_task(id, _: User = Depends(task_id_reachable)):
     tasks.delete_task(id)
 
 
-@v1_router.patch("/{id}/deadline")
-def change_task_deadline(
-    id: int, request: TaskDeadlineUpdate, _: User = Depends(task_id_reachable)
+@v1_router.patch("/{id}")
+def update_task_by_id(
+    id: int, request: TaskUpdate, _: User = Depends(task_id_reachable)
 ):
-    tasks.change_task_deadline(id, request.deadline)
-
-
-@v1_router.patch("/{id}/title")
-def change_task_heading(
-    id: int, request: TaskTitleUpdate, _: User = Depends(task_id_reachable)
-):
-    tasks.change_task_title(id, request.title)
+    if request.deadline:
+        tasks.change_task_deadline(id, request.deadline)
+    if request.title:
+        tasks.change_task_title(id, request.title)

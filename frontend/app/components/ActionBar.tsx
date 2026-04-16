@@ -1,10 +1,8 @@
-import colors from "app/colors.module.scss"
 import SubjectBadge from "./SubjectBadge"
 import { useNavigate } from "react-router"
 import { useGlobalStore } from "~/store"
 import styles from "app/app.module.scss"
 import React from "react"
-import { daysUntilDeadline } from "~/util"
 
 export default function ActionBar({ children, showReturn, routeTo }:
   { children?: React.ReactNode, showReturn: boolean, routeTo: string }) {

@@ -6,7 +6,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.core.config import DEFAULT_ROLE
 from src.core.permissions import PermissionTags, Permissions
-from src.database.db import Base
+from src.models.base import Base
 from src.schemas.news import News
 
 

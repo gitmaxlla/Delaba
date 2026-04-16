@@ -5,28 +5,17 @@ from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 
 from src.routers.root import router
-from src.database import db, obj
+from src.database import obj
 from src.internal.setup import manager
-
-from src.models.news import News
-from src.models.users import User
-from src.models.tasks import Task
-from src.models.channels import Channel
 
 from src.core.security import RateLimiter
 from src.core.config import DEV_MODE, ALLOWED_HOSTNAME, LogFilter
 
 
-# For type checkers not to mark schemas unused
-INCLUDE_SCHEMAS = News, User, Task, Channel
-
-
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     obj.create_default_bucket()
-    db.create_all()
-    manager.init_app()
-
+    manager.check_app_initialized()
     yield
 
 

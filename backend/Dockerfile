@@ -5,18 +5,17 @@ WORKDIR /backend
 COPY ./pyproject.toml .
 COPY ./uv.lock .
 
-RUN uv sync --locked
-RUN uv tool install uvicorn
+RUN uv sync --locked && uv tool install alembic
 
 COPY src ./src
 COPY run.py .
-COPY __init__.py .
+COPY alembic.ini .
+
 
 RUN apt-get update && apt-get install -y curl \
   && rm -rf /var/lib/apt/lists/*
 
 CMD ["uv", "run", "-m", "run"]
-
 
 
 
@@ -29,8 +28,7 @@ COPY ./pyproject.toml .
 COPY ./uv.lock .
 
 ENV UV_NO_DEV=1
-RUN uv sync --locked
-RUN uv tool install uvicorn
+RUN uv sync --locked && uv tool install uvicorn
 
 COPY src ./src
 COPY run.py .

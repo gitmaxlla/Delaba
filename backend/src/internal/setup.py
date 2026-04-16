@@ -28,7 +28,7 @@ class __Manager:
 
         return (user, random_password)
 
-    def init_app(self):
+    def check_app_initialized(self):
         user, random_password = self._create_admin_user()
 
         with db.Session() as session:

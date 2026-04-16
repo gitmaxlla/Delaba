@@ -7,7 +7,7 @@ from src.schemas.news import NewsCreate
 from src.schemas.tasks import TodoTaskCreate
 from src.schemas.channels import ChannelCreate
 
-from src.core.permissions import Permissions
+from src.core.permissions import PermissionTags
 from src.database import db
 from src.services.auth import TokenPayload, set_tokens
 from src.services.channels import create_channel
@@ -28,10 +28,10 @@ v1_router = APIRouter(prefix="/mock", tags=["mock"])
 
 
 def mock_data():
-    CHANNELS = 10
-    USERS = 50
-    TODOS = 150
-    NEWS = 50
+    CHANNELS = 5
+    USERS = 500
+    TODOS = 50
+    NEWS = 20
 
     channels = [" ".join(fake.words(3)) for _ in range(CHANNELS)]
     subjects = [" ".join(fake.words(2)) for _ in range(TODOS // 10)]
@@ -43,7 +43,7 @@ def mock_data():
 
     for _ in range(USERS):
         channel = random.choice(channels)
-        add_user(fake.email(), fake.name(), channel, Permissions.VIEW_CHANNEL)
+        add_user(fake.email(), fake.name(), channel, PermissionTags.VIEW_CHANNEL)
 
     for _ in range(TODOS):
         add_todo_task(

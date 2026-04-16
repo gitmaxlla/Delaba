@@ -38,11 +38,7 @@ class TodoTaskCreate(BaseModel):
     subtasks: List[str]
 
 
-class TaskDeadlineUpdate(BaseModel):
+class TaskUpdate(BaseModel):
     model_config = ConfigDict(from_attributes=True)
+    title: str | None
     deadline: datetime.datetime
-
-
-class TaskTitleUpdate(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
-    title: str

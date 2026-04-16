@@ -3,6 +3,8 @@ services:
     volumes:
       - ./backend/src/:/backend/src/:Z
       - ./backend/run.py:/backend/run.py:Z
+      - ./backend/migrations/:/backend/migrations:Z
+      - ./backend/alembic.ini:/backend/alembic.ini:Z
     build:
       target: development
     environment:
@@ -29,3 +31,7 @@ services:
     ports:
       - "9900:9000"
       - "9901:9001"
+
+  relational-db:
+    ports:
+      - "5400:5432"

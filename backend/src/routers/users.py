@@ -1,4 +1,4 @@
-from typing import Annotated, List
+from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 
@@ -8,6 +8,7 @@ from src.schemas.users import (
     PermissionTags,
     User,
     UserCreate,
+    UsersPaginatedResponse,
 )
 from src.schemas.users import (
     User as UserModel,
@@ -24,33 +25,41 @@ def get_user_data(user: User = Depends(logged_in)):
     return users.get_user_data(user.id)
 
 
+@v1_router.put("/data")
+def update_user_data(data: dict, user: User = Depends(logged_in)):
+    users.update_user_data(user.id, data)
+
+
 @v1_router.get("/permissions", response_model=int)
 def get_self_permissions(user: User = Depends(logged_in)):
     return users.get_user_permissions(user.id)
 
 
-@v1_router.get("/", response_model=List[UserModel])
+@v1_router.get("/", response_model=UsersPaginatedResponse)
 def get_users(
+    channel: Annotated[list[str], Query()] = [],
+    role: Annotated[list[str], Query()] = [],
+    permissions: Annotated[list[int], Query()] = [],
+    q: Annotated[str | None, Query()] = None,
+    email: Annotated[str | None, Query()] = None,
+    newest_first: Annotated[bool, Query()] = True,
     page: Annotated[int, Query(ge=0)] = 0,
     page_size: Annotated[int, Query(ge=1, le=50)] = 50,
     moderator: UserModel = Depends(moderator),
 ):
-    return users.get_by_channel(moderator.channel, page, page_size)
+    if not channel:
+        channel = [moderator.channel]
 
-
-@v1_router.get("/{id}", response_model=UserModel)
-def get_user(id):
-    return users.get_user(id)
-
-
-@v1_router.get("/{id}/data", response_model=dict)
-def get_user_data_by_id(id, _: User = Depends(admin)):
-    return users.get_user_data(id)
-
-
-@v1_router.put("/data")
-def update_user_data(data: dict, user: User = Depends(logged_in)):
-    users.update_user_data(user.id, data)
+    return users.get(
+        channel=channel,
+        role=role,
+        email=email,
+        page=page,
+        page_size=page_size,
+        q=q,
+        newest_first=newest_first,
+        permissions=permissions,
+    )
 
 
 @v1_router.post("/moderator")

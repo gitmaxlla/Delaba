@@ -32,19 +32,11 @@ class NewsCreate(BaseModel):
     bound_task_id: int | None = None
 
 
-class NewsTitleUpdate(BaseModel):
+class NewsUpdate(BaseModel):
     model_config = ConfigDict(from_attributes=True)
-    title: str
-
-
-class NewsMessageUpdate(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
-    message: str
-
-
-class NewsSectionUpdate(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
-    section: str
+    title: str | None
+    message: str | None
+    section: str | None
 
 
 class NewsResponse(NewsBase):

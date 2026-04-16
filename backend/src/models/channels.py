@@ -1,4 +1,4 @@
-from ..database.db import Base
+from src.models.base import Base
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from ..schemas.news import News
@@ -11,9 +11,6 @@ class Channel(Base):
 
     name: Mapped[str] = mapped_column(primary_key=True)
 
-    news: Mapped["News"] = relationship(backref="channel_news",
-                                        cascade="all, delete")
-    task: Mapped["Task"] = relationship(backref="channel_task",
-                                        cascade="all, delete")
-    user: Mapped["User"] = relationship(backref="channel_user",
-                                        cascade="all, delete")
+    news: Mapped["News"] = relationship(backref="channel_news", cascade="all, delete")
+    task: Mapped["Task"] = relationship(backref="channel_task", cascade="all, delete")
+    user: Mapped["User"] = relationship(backref="channel_user", cascade="all, delete")
