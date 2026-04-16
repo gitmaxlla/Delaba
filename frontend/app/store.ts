@@ -127,7 +127,6 @@ export const useGlobalStore = create<GlobalStore>((set) => ({
     const newMap = new Map(state.completed)
     newMap.set(taskId, null)
     authClient.put("/users/data", { "completed": [...newMap.keys()] }).catch((error) => {
-      console.log(error)
       useGlobalStore.getState().removeCompletedLocal(taskId)
     })
 
@@ -137,7 +136,6 @@ export const useGlobalStore = create<GlobalStore>((set) => ({
     const newMap = new Map(state.completed)
     newMap.delete(taskId)
     authClient.put("/users/data", { "completed": [...newMap.keys()] }).catch((error) => {
-      console.log(error)
       useGlobalStore.getState().addCompletedLocal(taskId)
     })
 

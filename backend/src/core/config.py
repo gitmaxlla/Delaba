@@ -45,8 +45,9 @@ REQUESTS_PER_MINUTE_LIMIT = 300
 class LogFilter(logging.Filter):
     def filter(self, record):
         ACCESS_LOG_EXCLUDE = ["/"]
-        if not isinstance(record.args, list) or not all(
-            isinstance(x, str) for x in record.args
+
+        if not isinstance(record.args, tuple) or not all(
+            isinstance(x, str | int) for x in record.args
         ):
             return True
 

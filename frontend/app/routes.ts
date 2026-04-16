@@ -6,5 +6,5 @@ export default [
   route("/subject/:name/:focusId?", "routes/subject.tsx"),
   route("/settings", "routes/settings.tsx"),
   route("/manage", "routes/manage.tsx"),
-  route("/plan", "routes/plan.tsx"),
+  // route("/plan", "routes/plan.tsx"),
 ] satisfies RouteConfig;

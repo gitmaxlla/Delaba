@@ -14,6 +14,7 @@ from src.core.config import DEV_MODE, ALLOWED_HOSTNAME, LogFilter
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
+    logging.getLogger("uvicorn.access").addFilter(LogFilter())
     obj.create_default_bucket()
     manager.check_app_initialized()
     yield
@@ -29,8 +30,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-logging.getLogger("uvicorn.access").addFilter(LogFilter())
 
 
 @app.middleware("http")

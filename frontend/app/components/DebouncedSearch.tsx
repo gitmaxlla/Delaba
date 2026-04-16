@@ -2,11 +2,12 @@ import { useState, useEffect } from "react";
 import Search from "antd/es/input/Search";
 
 export function DebouncedSearch(
-  { onDebounce, loading }: {
+  { onDebounce, loading, initial }: {
     onDebounce: (query: string) => void,
-    loading: boolean
+    loading: boolean,
+    initial: string
   }) {
-  const [query, setQuery] = useState("")
+  const [query, setQuery] = useState(initial)
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -20,7 +21,7 @@ export function DebouncedSearch(
   }, [query])
 
   return (
-    <Search enterButton={false} loading={loading} placeholder="Поиск"
+    <Search enterButton={false} value={query} loading={loading} placeholder="Поиск"
       onChange={(e) => {
         setQuery(e.target.value)
       }} />

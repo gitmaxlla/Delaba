@@ -13,16 +13,17 @@ import { redirect } from "react-router";
 
 import TaskCreationDialog from "~/components/TaskCreationDialog";
 
-export function meta({ }: Route.MetaArgs) {
-  return [
-    { title: "Delaba" },
-    { name: "description", content: "Tasks assigned to the provided subject." },
-  ];
-}
 
 interface SubjectParams {
   name: string,
   focusId: string,
+}
+
+export function meta({ params }: Route.MetaArgs) {
+  return [
+    { title: `${params.name} / Delaba` },
+    { name: "description", content: "Tasks assigned to the provided subject." },
+  ];
 }
 
 export async function clientLoader({

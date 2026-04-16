@@ -1,4 +1,6 @@
-import { DebouncedSearch } from "~/components/DebouncedSeach"
+import { useLoaderData } from "react-router"
+import { useSearchParams } from "react-router"
+import { DebouncedSearch } from "~/components/DebouncedSearch"
 import Layout, { Content, Header } from "antd/es/layout/layout"
 import Sider from "antd/es/layout/Sider"
 import { authClient } from "~/store"
@@ -15,13 +17,13 @@ import type { User } from "~/types"
 
 export function meta({ }: Route.MetaArgs) {
   return [
-    { title: "Management Panel" },
-    { name: "description", content: "App Management Panel" },
+    { title: "Панель управления / Delaba" },
+    { name: "description", content: "Графическая панель управления данными сервиса Delaba." },
   ]
 }
 
 export async function clientLoader({
-  params,
+  request,
 }: Route.ClientLoaderArgs) {
   try {
     const response = await authClient.get("/users/permissions")
@@ -32,6 +34,23 @@ export async function clientLoader({
     if (e.status === 401) {
       throw new Response("", { status: 404 })
     }
+  }
+
+  const url = new URL(request.url)
+  return {
+    filter: {
+      newestFirst: url.searchParams.get("newest_first") || true,
+      role: url.searchParams.get("role") || [] as string[],
+      channel: url.searchParams.get("channel") || "" as string,
+      permissions: url.searchParams.get("permissions") || [] as number[],
+      q: url.searchParams.get("q") || ""
+    },
+
+    pagination: {
+      current: url.searchParams.get("page") || 1,
+      pageSize: url.searchParams.get("page_size") || 10,
+      total: url.searchParams.get("total") || 0
+    } as TablePaginationConfig
   }
 }
 
@@ -74,26 +93,19 @@ const columns = [
 
 export default function Home() {
   const [api, contextHolder] = notification.useNotification()
+  const loader = useLoaderData()
   const [channels, setChannels] = useState<string[]>([])
 
-  const [selectedChannel, setSelectedChannelIdx] = useState("")
+  const [selectedChannel, setSelectedChannelIdx] = useState(loader.filter.channel)
   const [channelUsers, setChannelUsers] = useState<User[]>([])
 
-  const [searching, setSearching] = useState(false)
-  const [tableParams, setTableParams] = useState({
-    pagination: {
-      current: 1,
-      pageSize: 10,
-      total: 0
-    } as TablePaginationConfig
-  })
+  const [filter, setFilter] = useState(loader.filter)
 
-  const [filter, setFilter] = useState({
-    newestFirst: true,
-    role: [] as string[],
-    permissions: [] as number[],
-    q: ""
-  })
+  const [searching, setSearching] = useState(false)
+  const [tableParams, setTableParams] = useState({ pagination: loader.pagination })
+  const [searchParams, setSearchParams] = useSearchParams()
+
+  console.log(loader)
 
   const permisionFilters: SelectProps['options'] = [
     {
@@ -131,17 +143,21 @@ export default function Home() {
 
   useEffect(() => {
     const timer = setTimeout(() => {
+      const resultingQuery = {
+        "page_size": tableParams.pagination.pageSize,
+        "page": tableParams.pagination.current,
+        "channel": selectedChannel,
+        "newest_first": filter.newestFirst,
+        "q": filter.q,
+        "permissions": filter.permissions,
+        "role": filter.role
+      }
+
+      setSearchParams({ ...resultingQuery }, { replace: true })
+
       authClient
         .get('/users', {
-          params: {
-            "page_size": tableParams.pagination.pageSize,
-            "page": tableParams.pagination.current - 1,
-            "channel": selectedChannel,
-            "newest_first": filter.newestFirst,
-            "q": filter.q,
-            "permissions": filter.permissions,
-            "role": filter.role
-          }
+          params: { ...resultingQuery, "page": resultingQuery.page - 1 }
         })
         .then((response) => {
           setChannelUsers(response.data.values)
@@ -154,7 +170,6 @@ export default function Home() {
           setSearching(false)
         })
     }, 1000)
-
 
     return () => {
       clearTimeout(timer)
@@ -219,14 +234,14 @@ export default function Home() {
 
               <label>Пользователи</label>
 
-              <DebouncedSearch onDebounce={(query) => {
+              <DebouncedSearch initial={filter.q} onDebounce={(query) => {
                 setFilter({ ...filter, q: query })
               }} loading={searching} />
 
-              <Select placeholder="Роли" onChange={(value: string[]) => {
+              <Select placeholder="Роли" value={filter.role} onChange={(value: string[]) => {
                 setFilter({ ...filter, role: value })
               }} mode="tags" />
-              <Select onChange={(value: number[]) => {
+              <Select value={filter.permissions} onChange={(value: number[]) => {
                 setFilter({ ...filter, permissions: value })
               }} placeholder="Уровень доступа" mode="multiple" options={permisionFilters} />
 
