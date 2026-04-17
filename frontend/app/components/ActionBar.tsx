@@ -35,7 +35,7 @@ export default function ActionBar({ children, showReturn, routeTo }:
                 if (completed.has(indexedTask[1].id)) {
                   return <React.Fragment key={indexedTask[1].id} />
                 }
-                return <SubjectBadge key={indexedTask[1].id} num={indexedTask[0] + 1} task={indexedTask[1]} color={subjectColors.get(indexedTask[1].subject)} />
+                return <SubjectBadge key={indexedTask[1].id} num={subjectTasks[1].length - indexedTask[0]} task={indexedTask[1]} color={subjectColors.get(indexedTask[1].subject) || "grey"} />
               })}
               <div style={{ background: "transparent", minWidth: "10px", minHeight: "10px", maxWidth: "10px", maxHeight: "10px", borderRadius: "50%", marginTop: "10px", marginBottom: "10px" }} />
             </React.Fragment>

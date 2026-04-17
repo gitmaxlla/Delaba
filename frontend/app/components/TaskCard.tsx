@@ -45,7 +45,7 @@ export default function TaskCard({ task, num, toFocusId, editMode }: { task: Tas
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "37px" }}>
       {(editMode && !completed.has(task.id)) ? <button onClick={() => {
-        setInlineUpdateMode(true)
+        setInlineUpdateMode(!inlineUpdateMode)
         setUpdatedDeadline(task.deadline)
         setUpdatedTitle(task.title)
       }} className={styles["edit-button"]} style={{ fontSize: "16px" }}>Редактировать метаданные</button> : <></>}
@@ -78,15 +78,8 @@ export default function TaskCard({ task, num, toFocusId, editMode }: { task: Tas
                   setInlineUpdateMode(false)
                 }
               })
-            }} style={{ width: "100%", backgroundColor: color, color: "white", cursor: "crosshair", padding: "20px" }}>
+            }} style={{ width: "100%", top: 0, backgroundColor: color, color: "white", cursor: "crosshair", padding: "20px" }}>
               Готово
-            </button>
-
-            <button onClick={(event) => {
-              event.stopPropagation()
-              setInlineUpdateMode(false)
-            }} style={{ width: "100%", backgroundColor: color, color: "white", cursor: "crosshair", padding: "20px" }}>
-              Отменить
             </button>
           </div>
         </div>

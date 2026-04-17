@@ -5,7 +5,7 @@ from fastapi import APIRouter
 
 from src.internal import mock
 from src.services import auth
-from . import channels, news, tasks, users
+from . import channels, news, tasks, users, external
 
 start_timestamp = datetime.now()
 router = APIRouter()
@@ -16,6 +16,7 @@ v1.include_router(tasks.v1_router)
 v1.include_router(news.v1_router)
 v1.include_router(auth.v1_router)
 v1.include_router(channels.v1_router)
+v1.include_router(external.v1_router)
 
 if os.getenv("DEV_MODE"):
     v1.include_router(mock.v1_router)

@@ -6,3 +6,7 @@ class DelabaError(Exception):
 
 class RootEntityViolationError(DelabaError):
     pass
+
+
+class LLMGenerationError(DelabaError):
+    pass

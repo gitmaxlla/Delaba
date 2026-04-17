@@ -25,7 +25,7 @@ export default function TaskCreationDialog(
 
   const resetCreationData = () => {
     setHidden(false)
-    setUploadProgress("100%")
+    setUploadProgress("0%")
     setCreationTitle("")
     setCreationDeadline("")
     setCreationSubtasks("")

@@ -138,22 +138,32 @@ h2 {
     font-size: 1.1em;
     color: black;
     width: 390px;
-    max-height: 50vh;
+    max-height: 45vh;
     margin-bottom: 50px;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
 }
 
+input {
+  padding: 2px;
+}
+
+input:focus {
+  outline: 2px solid black;
+  border-radius: 2px;
+}
+
 .subject-hovered-container {
-    background-color: gray;
+    overflow-y: scroll;
+    background-color: transparent;
     transition: background-color 0.5s, opacity 0.3s;
     opacity: 1;
     padding: 10px;
     border-radius: 15px;
     color: white;
     width: 390px;
-    height: 210px;
+    max-height: 40vh;
     display: flex;
     flex-direction: column;
     justify-content: start;

@@ -5,7 +5,6 @@ import {
   Outlet,
   Scripts,
   ScrollRestoration,
-  useNavigate,
 } from "react-router";
 
 import type { Route } from "./+types/root";
@@ -18,22 +17,23 @@ import { useEffect } from "react";
 import { authClient, baseClient } from "./store";
 import { useGlobalStore } from "./store";
 
-export const links: Route.LinksFunction = () => [
-  { rel: "preconnect", href: "https://fonts.googleapis.com" },
-  {
-    rel: "preconnect",
-    href: "https://fonts.gstatic.com",
-    crossOrigin: "anonymous",
-  },
-  {
-    rel: "stylesheet",
-    href: "https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap",
-  },
-];
+const landingSchema = {
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "Delaba",
+  "description": "Все учебные задания в одном месте",
+  "url": "https://delaba.ru",
+  "slogan": "Где лаба? - Делаба",
+  "applicationCategory": ["ProductivityTools", "Education"],
+  "inLanguage": "ru",
+  "codeRepository": "github.com/gitmaxlla/Delaba",
+  "operatingSystem": "all",
+  "browserRequirements": "Requires Javascript. Requires HTML5."
+}
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const { authorized, unauthorize, updateNews, addCompletedLocal, updateTasks, enableModeratorOptions } = useGlobalStore()
- 
+
   useEffect(() => {
     baseClient.post("/auth/refresh").then(() => {
       authClient.get("/tasks/").then((response) => {
@@ -41,7 +41,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
       })
 
       authClient.get("/users/permissions").then((response) => {
-        if(Number(response.data) >= 6) {
+        if (Number(response.data) >= 6) {
           enableModeratorOptions()
         } else {
           localStorage.setItem("enable_edit", "false")
@@ -68,8 +68,20 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon.ico" type="image/x-icon" />
+
+        <meta property="og:type" content="website" />
+        <meta property="og:site_name" content="Delaba" />
+        <meta property="og:url" content="https://delaba.ru" />
+        <meta property="og:locale" content="ru_RU" />
+        <meta property="og:title" content="Трекер лабораторных Delaba" />
+        <meta property="og:description" content="Учебные задачи в едином месте." />
+        <meta property="og:image" content="https://delaba.ru/logo.svg" />
+
         <Meta />
         <Links />
+
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(landingSchema) }}>
+        </script>
       </head>
       <body>
         {children}
@@ -86,7 +98,7 @@ export default function App() {
 
 export function HydrateFallback() {
   return <GradientBackground color={colors.primary}>
-    <div style={{width: "100%", height: "100%", display: "flex", justifyContent: "center", alignItems: "center"}}>
+    <div style={{ width: "100%", height: "100%", display: "flex", justifyContent: "center", alignItems: "center" }}>
       <h1 className={styles['loading-message']}>Загрузка</h1>
     </div>
   </GradientBackground>
@@ -110,19 +122,19 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
 
   return (
     <GradientBackground color={colors.primary}>
-    <main style={{display: "flex", flexDirection: "column", justifyContent: "center", gap: "50px", alignItems: "center", height: "100%", width: "100%"}}>
-      <div style={{display: "flex", gap: "100px", alignItems: "center"}}>
-        <img style={{width: "300px"}} src="/logo_filled.svg"></img>
-        <div style={{width: "7px", borderRadius: "15px", height: "100%", backgroundColor: colors.primary}} />
-        <h1 style={{fontSize: "120px", transform: "translateY(-20px)"}}>{message}</h1>
-      </div>
-      <p style={{color: colors.primary, fontSize: "32px"}}>{details}</p>
-      {stack && (
-        <pre className="w-full p-4 overflow-x-auto">
-          <code>{stack}</code>
-        </pre>
-      )}
-    </main>
+      <main style={{ display: "flex", flexDirection: "column", justifyContent: "center", gap: "50px", alignItems: "center", height: "100%", width: "100%" }}>
+        <div style={{ display: "flex", gap: "100px", alignItems: "center" }}>
+          <img style={{ width: "300px" }} src="/logo_filled.svg"></img>
+          <div style={{ width: "7px", borderRadius: "15px", height: "100%", backgroundColor: colors.primary }} />
+          <h1 style={{ fontSize: "120px", transform: "translateY(-20px)" }}>{message}</h1>
+        </div>
+        <p style={{ color: colors.primary, fontSize: "32px" }}>{details}</p>
+        {stack && (
+          <pre className="w-full p-4 overflow-x-auto">
+            <code>{stack}</code>
+          </pre>
+        )}
+      </main>
     </GradientBackground>
   );
 }

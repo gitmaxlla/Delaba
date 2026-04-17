@@ -4,13 +4,16 @@ import colors from "app/colors.module.scss"
 import styles from "app/app.module.scss"
 import Carousel from "~/components/Carousel";
 import GradientBackground from "~/components/GradientBackground";
-import { useEffect, useState } from "react";
-import { useGlobalStore } from "~/store";
+import { useEffect, useRef, useState } from "react";
+import { authClient, useGlobalStore } from "~/store";
 import { useNavigate } from "react-router";
 import { formatDate } from "~/util";
 import { redirect } from "react-router";
 import { daysUntilDeadline, inflectDayWord } from "~/util";
-import TaskCreationDialog from "~/components/TaskCreationDialog";
+import { Suspense } from "react";
+import { lazy } from "react";
+
+const TaskCreationDialog = lazy(() => import("~/components/TaskCreationDialog"))
 
 export function meta({ }: Route.MetaArgs) {
   return [
@@ -28,13 +31,19 @@ export async function clientLoader({
 }
 
 export default function Home() {
-  const { authorized, news, tasks, subjectColors } = useGlobalStore()
+  const { moderator, authorized, news, tasks, subjectColors } = useGlobalStore()
   const navigate = useNavigate()
 
-  const [hovering, setHovering] = useState("Не выбрано")
+  const [hovering, setHovering] = useState("Delaba AI")
   const [info, setInfo] = useState<string[]>([])
   const [showCreationDialog, setShowCreationDialog] = useState(false)
 
+  const [externalApiHealthy, setExternalApiHealthy] = useState(true)
+  const [userPrompt, setUserPrompt] = useState("")
+
+  const [AIResponse, setAIResponse] = useState("")
+
+  const abortController = useRef<AbortController>(null)
   const [subjects, setSubjects] = useState<string[]>([])
   useEffect(() => {
     setSubjects(
@@ -43,13 +52,34 @@ export default function Home() {
   }, [tasks])
 
   useEffect(() => {
+    if (hovering == "Delaba AI" && externalApiHealthy == false) {
+      setAIResponse("Сервис нейросети временно недоступен. Попробуйте позже.")
+    }
+  }, [externalApiHealthy, hovering])
+
+  useEffect(() => {
     if (!authorized) {
       navigate("/")
     }
   }, [authorized])
 
   useEffect(() => {
-    if (hovering != "Не выбрано") {
+    authClient.get("/external/ai/health").catch((response) => {
+      if (response.status != 200) {
+        setExternalApiHealthy(false)
+        console.log(externalApiHealthy)
+      }
+    })
+
+    return () => {
+      if (abortController.current) {
+        abortController.current.abort()
+      }
+    }
+  }, [])
+
+  useEffect(() => {
+    if (hovering != "Delaba AI") {
       const subject_tasks = tasks.get(hovering)
 
       if (subject_tasks !== undefined) {
@@ -71,19 +101,25 @@ export default function Home() {
 
         setInfo([`Опубликовано заданий: ${numTasks}`, `Ближайший дедлайн: ${deadlineClosestDate.getDate() + "." + deadlineClosestDate.getMonth() + "." + deadlineClosestDate.getFullYear()}`, `${deadlineClosest > 0 ? `(осталось ${deadlineClosest} ${inflectDayWord(deadlineClosest)})` : "(прошёл)"}`])
       }
+    } else {
+      setInfo([])
     }
   }, [hovering])
 
   return (
     <GradientBackground color={colors.primary}>
-      <TaskCreationDialog subject="" hidden={!showCreationDialog} setHidden={setShowCreationDialog} />
+      {moderator ?
+        <Suspense>
+          <TaskCreationDialog subject="" hidden={!showCreationDialog} setHidden={setShowCreationDialog} />
+        </Suspense>
+        : <></>}
 
       <div style={{ width: "100%", height: "100%", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <ActionBar showReturn={false} routeTo="/" />
 
         <Carousel subjects={subjects}
           onHover={(subject) => { setHovering(subject) }}
-          onHoverEnd={(subject) => { setHovering("Не выбрано") }}
+          onHoverEnd={(subject) => { setHovering("Delaba AI") }}
           onSelected={(subject) => { navigate("/subject/" + subject) }}
           onCreate={() => { setShowCreationDialog(true) }}
         />
@@ -108,16 +144,52 @@ export default function Home() {
             </div>
           </div>
 
-          <div style={{ backgroundColor: subjectColors.get(hovering), opacity: hovering == "Не выбрано" ? 0.0 : 1.0 }} className={styles["subject-hovered-container"]}>
+          <div style={{
+            color: "black",
+            backgroundColor: hovering == "Delaba AI" ? "transparent" : subjectColors.get(hovering)
+          }}
+            className={styles["subject-hovered-container"]}>
             <div>
-              <h3>{hovering}</h3>
+              <div style={{ display: "flex", flexDirection: "row", justifyContent: "space-between" }}>
+                <h3>{hovering}</h3>
+                {hovering == "Delaba AI" ? <button style={{
+                  outline: "1px solid black",
+                  padding: "5px",
+                  borderRadius: "6px"
+                }} onClick={() => {
+                  if (abortController.current) {
+                    abortController.current.abort()
+                  }
+
+                  setAIResponse("")
+
+                  abortController.current = new AbortController()
+                  authClient.post("/external/ai", {
+                    content: userPrompt
+                  }, { signal: abortController.current!.signal, timeout: 30000 }).then((response) => {
+                    setAIResponse(response.data.content)
+                  }).catch(error => {
+                    if (error.response.status == 500) {
+                      setExternalApiHealthy(false)
+                    }
+                  })
+                }}>
+                  {externalApiHealthy ? "Отправить" : "Переподключиться"}
+                </button> : <></>}
+              </div>
               <hr />
             </div>
-            {info.map((line) => (
-              <p style={{ opacity: hovering == "Не выбрано" ? 0.0 : 1.0 }} key={line}>
+            {hovering == "Delaba AI" ? <p>{AIResponse}</p> : info.map((line) => (
+              <span key={line}>
                 {line}
-              </p>
+              </span>
             ))}
+            {(hovering == "Delaba AI" && externalApiHealthy) ?
+              <input value={userPrompt} onChange={(e) => {
+                setUserPrompt(e.target.value)
+              }} type="text" placeholder="Задайте вопрос по недавним задачам" />
+              : <></>}
+
           </div>
         </div>
       </div>

@@ -30,6 +30,10 @@ DATABASE_URL = f"postgresql+psycopg://{_db_user}@{_db_location}"
 SQLALCHEMY_ECHO = os.environ["SQLALCHEMY_ECHO"] == "true"
 DEV_MODE = os.environ["DEV_MODE"] == "true"
 
+OPENAI_ENDPOINT = os.environ["OPENAI_ENDPOINT"]
+OPENAI_MODEL_TAG = os.environ["OPENAI_MODEL_TAG"]
+OPENAI_API_KEY = os.environ["OPENAI_API_KEY"]
+
 DAY_SECS = 60 * 60 * 24
 REFRESH_TOKEN_EXPIRES_TIME_SEC = DAY_SECS * 20
 ACCESS_TOKEN_EXPIRES_TIME_SEC = 60

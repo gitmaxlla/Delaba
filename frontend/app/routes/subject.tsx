@@ -1,3 +1,4 @@
+import { lazy, Suspense } from "react";
 import type { Route } from "./+types/home";
 import styles from "app/app.module.scss"
 import colors from "app/colors.module.scss"
@@ -11,7 +12,7 @@ import type { Task } from "~/types";
 import { useEffect, useState, useRef } from "react";
 import { redirect } from "react-router";
 
-import TaskCreationDialog from "~/components/TaskCreationDialog";
+const TaskCreationDialog = lazy(() => import("~/components/TaskCreationDialog"));
 
 
 interface SubjectParams {
@@ -76,7 +77,11 @@ export default function Subject() {
 
   return (
     <GradientBackground color={colors.primary}>
-      <TaskCreationDialog subject={name!} hidden={!showCreationDialog} setHidden={setShowCreationDialog} />
+      {moderator ?
+        <Suspense>
+          <TaskCreationDialog subject={name!} hidden={!showCreationDialog} setHidden={setShowCreationDialog} />
+        </Suspense>
+        : <></>}
 
       <div style={{ display: "flex", width: "100%", height: "100%", gap: "25px", justifyContent: "space-between", flexDirection: "row", alignItems: "center" }}>
         <ActionBar showReturn={true} routeTo="/home" />

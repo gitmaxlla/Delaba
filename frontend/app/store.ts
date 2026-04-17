@@ -10,19 +10,61 @@ const server: string = "http://127.0.0.1:8000/v1"
 
 export const baseClient = axios.create({
   baseURL: server,
-  withCredentials: true
+  withCredentials: true,
+  timeout: 1000
 })
+
+baseClient.interceptors.response.use(
+  (response) => { return response; },
+  (error) => {
+    if (error.code === "ECONNABORTED") {
+      alert("Сервер временно недоступен, попробуйте зайти позже.")
+    }
+
+    if (error.code === "ERR_NETWORK") {
+      alert("Не удаётся установить подключение. Проверке доступность сети и попробуйте снова.")
+    }
+
+    return Promise.reject(error)
+  }
+)
 
 export const authClient = axios.create({
   baseURL: server,
   withCredentials: true,
   paramsSerializer: {
     indexes: null
-  }
+  },
+
+  transitional: {
+    clarifyTimeoutError: true
+  },
+
+  timeout: 5000
 })
 
+authClient.interceptors.response.use(
+  (response) => { return response; },
+  (error) => {
+    if (error.code === "ETIMEDOUT") {
+      alert("Сервер временно недоступен, попробуйте зайти позже.")
+    }
+
+    if (error.code === "ECONNABORTED") {
+      console.log("Aborting some request...")
+    }
+
+    if (error.code === "ERR_NETWORK") {
+      alert("Не удаётся установить подключение. Проверке доступность сети и попробуйте снова.")
+    }
+
+    return Promise.reject(error)
+  }
+)
+
+
 axiosRetry(authClient, {
-  retries: 2,
+  retries: 3,
   retryDelay: axiosRetry.exponentialDelay,
   retryCondition: (error) => {
     return error.response?.status === 401;
