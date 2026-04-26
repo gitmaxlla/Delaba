@@ -22,7 +22,7 @@ def create_default_bucket():
     try:
         client.create_bucket(Bucket=OBJ_STORAGE_DEFAULT_BUCKET)
     except client.exceptions.BucketAlreadyOwnedByYou:
-        print("DELABA: Using a pre-existing S3 bucket", flush=True)
+        print("APP: Using a pre-existing S3 bucket", flush=True)
 
 
 def get_default_bucket():

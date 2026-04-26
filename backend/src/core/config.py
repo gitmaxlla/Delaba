@@ -4,7 +4,7 @@ from typing import cast
 
 DEFAULT_ROLE = "Студент"
 
-# Using environ will generate exceptions conveniently
+# Using environ will generate exceptions on null conveniently
 DATABASE_NAME = os.environ["POSTGRES_DB"]
 DATABASE_USER = os.environ["POSTGRES_USER"]
 DATABASE_PASSWORD = os.environ["POSTGRES_PASSWORD"]
@@ -17,7 +17,7 @@ OBJ_STORAGE_ROOT_PASSWORD = os.environ["MINIO_ROOT_PASSWORD"]
 OBJ_STORAGE_HOSTNAME = os.environ["MINIO_HOSTNAME"]
 OBJ_STORAGE_PORT = os.environ["MINIO_PORT"]
 
-ALLOWED_HOSTNAME = os.environ["ALLOWED_HOSTNAME"]
+ALLOWED_HOSTNAME = os.environ["SERVER_HOSTNAME"]
 ADMIN_MAIL = os.environ["ADMIN_MAIL"]
 DELABA_MAIL = os.environ["DELABA_MAIL"]
 
@@ -28,7 +28,7 @@ _db_location = f"{DATABASE_ADDRESS}:{DATABASE_PORT}/{DATABASE_NAME}"
 _db_user = f"{DATABASE_USER}:{DATABASE_PASSWORD}"
 DATABASE_URL = f"postgresql+psycopg://{_db_user}@{_db_location}"
 SQLALCHEMY_ECHO = os.environ["SQLALCHEMY_ECHO"] == "true"
-DEV_MODE = os.environ["DEV_MODE"] == "true"
+DEV_MODE = os.getenv("DEV_MODE") == "true"
 
 OPENAI_ENDPOINT = os.environ["OPENAI_ENDPOINT"]
 OPENAI_MODEL_TAG = os.environ["OPENAI_MODEL_TAG"]

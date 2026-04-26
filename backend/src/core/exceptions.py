@@ -1,12 +1,12 @@
-class DelabaError(Exception):
+class AppError(Exception):
     def __init__(self, message: str):
         self.message = message
         super().__init__(self.message)
 
 
-class RootEntityViolationError(DelabaError):
+class RootEntityViolationError(AppError):
     pass
 
 
-class LLMGenerationError(DelabaError):
+class LLMGenerationError(AppError):
     pass

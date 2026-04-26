@@ -1,5 +1,4 @@
 #! /usr/bin/env python3
-import sys
 import os
 import secrets
 from dataclasses import dataclass
@@ -19,7 +18,9 @@ CONFIG_FIELDS: dict[str, DotenvEntry] = {
     "POSTGRES_ADDRESS": DotenvEntry("relational-db"),
     "POSTGRES_PORT": DotenvEntry("5432"),
     "SQALCHEMY_ECHO": DotenvEntry("false", "should SQAlchemy logs be verbose?"),
-    "ALLOWED_HOSTNAME": DotenvEntry("delaba.ru", "website's domain name to allow CORS"),
+    "SERVER_HOSTNAME": DotenvEntry(
+        "https://delaba.ru", "website's domain name to allow CORS"
+    ),
     "JWT_REFRESH_SECRET": DotenvEntry(
         str(secrets.token_urlsafe(32)), "default is a randomly generated string."
     ),
@@ -68,21 +69,10 @@ def build_dotenv():
 
 
 if __name__ == "__main__":
-    if len(sys.argv) == 1 or len(sys.argv) > 2 or sys.argv[1] not in OPERATIONS:
-        print(f"Supported operations: {str(OPERATIONS)}")
+    if os.path.exists(".env"):
+        print(
+            "There is already .env in root directory. Please move/rename the file to avoid data loss."
+        )
+        exit(-1)
     else:
-        match sys.argv[1]:
-            case "dev":
-                print("Run in shell: sudo docker compose up")
-            case "prod":
-                print("Run in shell: sudo docker compose -f docker-compose.yml up")
-            case "test":
-                raise NotImplementedError
-            case "build-dotenv":
-                if os.path.exists(".env"):
-                    print(
-                        "There is already .env in root directory. Please move/rename the file to avoid data loss."
-                    )
-                    exit(-1)
-                else:
-                    build_dotenv()
+        build_dotenv()

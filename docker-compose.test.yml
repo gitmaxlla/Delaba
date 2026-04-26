@@ -1,0 +1,83 @@
+services:
+  relational-db:
+    volumes:
+      - /var/lib/postgresql/data
+
+  e2e-testing:
+    build:
+      context: ./e2e
+    depends_on:
+      backend:
+        condition: service_healthy
+      reverse-proxy:
+        condition: service_healthy
+    volumes:
+      - ./e2e/:/tests/:Z
+
+  backend-unit-testing:
+    build:
+      context: ./backend
+      target: development
+    volumes:
+      - ./backend/tests/unit/:/backend/tests/unit/:Z
+    env_file:
+      - .env
+    depends_on:
+      relational-db:
+        condition: service_healthy
+    command: uv run pytest tests/unit
+
+  backend-integration-testing:
+    build:
+      context: ./backend
+      target: development
+    volumes:
+      - ./backend/tests/integration/:/backend/tests/integration/:Z
+    env_file:
+      - .env
+    depends_on:
+      relational-db:
+        condition: service_healthy
+    command: uv run pytest tests/integration
+
+  backend-coverage-testing:
+    build:
+      context: ./backend
+      target: development
+    volumes:
+      - ./backend/tests/:/backend/tests/:Z
+    command: uv run python -m pytest --cov=src --cov-report=term ./tests
+
+  frontend-components-testing:
+    build:
+      context: ./frontend
+      target: development
+    volumes:
+      - ./frontend/tests/components/:/frontend/tests/components/:Z
+    env_file:
+      - .env
+    depends_on:
+      relational-db:
+        condition: service_healthy
+    command: bun test ./tests/components
+
+  frontend-scenarios-testing:
+    build:
+      context: ./frontend
+      target: development
+    volumes:
+      - ./frontend/tests/components/:/frontend/tests/components/:Z
+    env_file:
+      - .env
+    depends_on:
+      relational-db:
+        condition: service_healthy
+    command: bun test ./tests/scenarios
+
+  frontend-coverage-testing:
+    build:
+      context: ./frontend
+      target: development
+    volumes:
+      - ./frontend/tests/:/frontend/tests/:Z
+    command: bunx vitest --coverage ./tests

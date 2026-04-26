@@ -10,7 +10,6 @@ CMD [ "bun", "run", "dev", "--host", "0.0.0.0"]
 
 
 
-# TODO: Change production pipeline to use SSR
 FROM oven/bun:1 AS production
 
 WORKDIR /frontend
