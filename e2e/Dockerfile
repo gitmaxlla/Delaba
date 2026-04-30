@@ -5,5 +5,4 @@ WORKDIR /tests
 COPY ./ ./
 RUN pip install --no-cache-dir -r test-requirements.txt
 
-ENV PYTHONUNBUFFERED=1
-CMD ["pytest", "-s"]
+CMD ["pytest", "-s", "--tracing", "retain-on-failure", "--output", "/tests/traces/"]

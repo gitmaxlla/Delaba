@@ -26,4 +26,6 @@ dist-ssr
 # Environment configuration
 .env
 
+.venv/
+traces/
 __pycache__/

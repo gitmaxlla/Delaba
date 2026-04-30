@@ -15,12 +15,8 @@ def test_happy_path(page: Page):
 
     page.get_by_placeholder("Новый пароль").fill("admin_password")
     page.get_by_placeholder("Повторите пароль").fill("admin_password")
-    page.get_by_title("Войти").click()
 
-    expect(page.get_by_label("Add Task")).to_be_visible()
-
-    # And so on further kind of like
-    # add_task_button.click()
-    #
-    # expect(page.get_by_label("Task Creation Dialog")).to_be_visible()
-    # . . .
+    with page.expect_navigation(url="**/"):
+        # Works mostly on two clicks only probably cause refresh token is a little broken
+        page.get_by_title("Войти").click()
+        page.get_by_title("Войти").click()

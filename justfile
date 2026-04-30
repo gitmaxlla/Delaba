@@ -1,6 +1,7 @@
 main := "-f docker-compose.yml"
 dev := "-f docker-compose.dev.yml"
 test := "-f docker-compose.test.yml"
+e2e := "-f docker-compose.e2e.yml"
 
 exit := "--exit-code-from"
 
@@ -43,7 +44,7 @@ test-frontend-coverage:
 
 test-e2e:
   just down
-  docker compose {{main}} {{dev}} {{test}} up {{exit}} e2e-testing e2e-testing
+  docker compose {{main}} {{dev}} {{test}} {{e2e}} up {{exit}} e2e-testing e2e-testing
 
 # Recommended for dev usage only
 test-all: test-backend-coverage test-frontend-coverage test-e2e
