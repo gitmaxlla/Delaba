@@ -8,7 +8,7 @@ jobs:
   build-and-test:
     runs-on: ubuntu-latest
     steps:
-      - name: Get lastest repo
+      - name: Get latest repo
         uses: actions/checkout@v4
 
       # Could also add caching support ideally
@@ -44,8 +44,4 @@ jobs:
       - name: Scaffold production build
         run: just up-prod
 
-      - name: Cleanup
-        if: always()
-        run: |
-          just down ||
-          rm -f .env
+      # Would be good to rm .env here or use Docker Secrets

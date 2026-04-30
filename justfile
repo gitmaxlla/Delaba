@@ -16,7 +16,7 @@ up-dev:
 
 up-prod:
   just down
-  docker compose {{main}} up --build
+  docker compose {{main}} up -d --build
 
 down:
   docker compose {{main}} {{dev}} {{test}} down --remove-orphans

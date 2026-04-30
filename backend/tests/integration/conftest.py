@@ -35,11 +35,15 @@ def get_real_db():
 
 @pytest.fixture(scope="session")
 def get_test_users(get_real_db, get_test_data):
-    get_real_db.merge(get_test_data["ch1"])
-    get_real_db.merge(get_test_data["ch2"])
-    get_real_db.merge(get_test_data["a"])
-    get_real_db.merge(get_test_data["u"])
-    get_real_db.commit()
+    # Not graceful yikes
+    try:
+        get_real_db.merge(get_test_data["ch1"])
+        get_real_db.merge(get_test_data["ch2"])
+        get_real_db.merge(get_test_data["a"])
+        get_real_db.merge(get_test_data["u"])
+        get_real_db.commit()
+    except Exception:
+        pass
 
 
 @pytest.fixture(scope="session")

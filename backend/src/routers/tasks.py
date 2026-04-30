@@ -93,7 +93,6 @@ def get_task(id: int, _: User = Depends(task_id_reachable)):
 def get_document_file(id: int, _: User = Depends(task_id_reachable)):
     file_hash = tasks.get_document_file_hash(id)
     file = storage.get_object(Bucket=get_default_bucket(), Key=file_hash)
-    print(file, flush=True)
     return StreamingResponse(file["Body"].iter_chunks(), media_type="application_pdf")
 
 

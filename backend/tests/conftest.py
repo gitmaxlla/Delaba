@@ -4,6 +4,8 @@ from src.core.permissions import PermissionTags
 from src.models.channels import Channel
 from src.models.users import User
 
+from src.core.security import hash as pwdlib_hash
+
 
 @pytest.fixture(scope="session")
 def get_test_data():
@@ -14,14 +16,14 @@ def get_test_data():
             login="admin_login",
             role="admin",
             permissions=PermissionTags.ADMIN,
-            password_hashed="admin_password",
+            password_hashed=pwdlib_hash("admin_password"),
             channel="",
         ),
         "u": User(
             login="user_login",
             role="user",
             permissions=PermissionTags.VIEW_CHANNEL,
-            password_hashed="user_password",
+            password_hashed=pwdlib_hash("user_password"),
             channel="test",
         ),
     }
