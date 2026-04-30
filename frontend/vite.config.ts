@@ -12,6 +12,11 @@ export default defineConfig(({ command }) => {
       !process.env.VITEST && reactRouter(),
       tsconfigPaths(),
     ],
+    server: {
+      allowedHosts: true,
+      host: true,
+      port: 5173,
+    },
     resolve: {
       alias: {
         ...(buildMode && { "react-dom/server": "react-dom/server.node" }),

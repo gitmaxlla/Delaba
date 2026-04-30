@@ -26,6 +26,6 @@ RUN sed -i "s|PLACEHOLDER|$VITE_HOSTNAME|g" public/sitemap.xml && \
 RUN bun install --frozen-lockfile
 RUN bun run build
 
-FROM nginx:1 as production
+FROM nginx:1 AS production
 COPY --from=builder /frontend/build/client /usr/share/nginx/html
 COPY nginx.conf /etc/nginx/nginx.conf

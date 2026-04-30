@@ -70,9 +70,8 @@ export default function Home() {
 
   useEffect(() => {
     authClient.get("/external/ai/health").catch((response) => {
-      if (response.status != 200) {
+      if (response.status != 200 || !response.data) {
         setExternalApiHealthy(false);
-        console.log(externalApiHealthy);
       }
     });
 
@@ -222,6 +221,7 @@ export default function Home() {
                 <h3>{hovering}</h3>
                 {hovering == "Delaba AI" ? (
                   <button
+                    aria-label="Generate AI Answer"
                     style={{
                       outline: "1px solid black",
                       padding: "5px",
