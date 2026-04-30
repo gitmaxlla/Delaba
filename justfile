@@ -42,6 +42,7 @@ test-frontend-coverage:
   docker compose {{main}} {{dev}} {{test}} up {{exit}} frontend-coverage-testing frontend-coverage-testing
 
 test-e2e:
+  just down
   docker compose {{main}} {{dev}} {{test}} up {{exit}} e2e-testing e2e-testing
 
 # Recommended for dev usage only
