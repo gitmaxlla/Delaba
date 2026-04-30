@@ -6,9 +6,9 @@ import type { Task, News } from "./types";
 import colors from "app/colors.module.scss";
 import { sortByDeadline } from "./util";
 
-const hostname = import.meta.env.VITE_HOSTNAME || "http://127.0.0.1";
+const hostname = import.meta.env.VITE_HOSTNAME || "http://127.0.0.1:8000";
 const api_version = import.meta.env.VITE_API_VERSION || 1;
-const server: string = `${hostname}:8000/v${api_version}`;
+const server: string = `${hostname}/v${api_version}`;
 
 export const baseClient = axios.create({
   baseURL: server,

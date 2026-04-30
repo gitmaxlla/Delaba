@@ -2,4 +2,4 @@ User-agent: *
 Allow: /$
 Disallow: /
 
-Sitemap: https://delaba.ru/sitemap.xml
+Sitemap: PLACEHOLDER/sitemap.xml

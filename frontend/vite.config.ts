@@ -3,20 +3,29 @@ import tailwindcss from "@tailwindcss/vite";
 import { defineConfig } from "vitest/config";
 import tsconfigPaths from "vite-tsconfig-paths";
 
-export default defineConfig({
-  plugins: [
-    tailwindcss(),
-    !process.env.VITEST && reactRouter(),
-    tsconfigPaths(),
-  ],
-  test: {
-    environment: "happy-dom",
-    coverage: {
-      provider: "istanbul",
-      include: ["app/**/*.{tsx,ts}"],
-      reporter: ["text"],
+export default defineConfig(({ command }) => {
+  const buildMode = command === "build";
+
+  return {
+    plugins: [
+      tailwindcss(),
+      !process.env.VITEST && reactRouter(),
+      tsconfigPaths(),
+    ],
+    resolve: {
+      alias: {
+        ...(buildMode && { "react-dom/server": "react-dom/server.node" }),
+      },
     },
-    globals: true,
-    setupFiles: ["./tests/setup.ts"],
-  },
+    test: {
+      environment: "happy-dom",
+      coverage: {
+        provider: "istanbul",
+        include: ["app/**/*.{tsx,ts}"],
+        reporter: ["json-summary"],
+      },
+      globals: true,
+      setupFiles: ["./tests/setup.ts"],
+    },
+  };
 });

@@ -1,7 +1,7 @@
 from src.models.base import Base
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy import DateTime, func, ForeignKey
+from sqlalchemy import JSON, DateTime, func, ForeignKey
 import datetime
 
 from ..schemas.news import News
@@ -22,6 +22,8 @@ class Task(Base):
     deadline: Mapped[datetime.datetime] = mapped_column(DateTime, default=func.now())
 
     fileHash: Mapped[str] = mapped_column(nullable=True)
-    subtasks: Mapped[JSONB] = mapped_column(JSONB, nullable=True)
+    subtasks: Mapped[JSON] = mapped_column(
+        JSONB().with_variant(JSON, "sqlite"), nullable=True
+    )
 
     news: Mapped["News"] = relationship(backref="task", cascade="all, delete")

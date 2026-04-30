@@ -1,4 +1,4 @@
-from src.core.config import ADMIN_MAIL
+from src.core.config import ADMIN_MAIL, DEV_MODE
 from src.core.permissions import PermissionTags
 from src.core.security import generate_password
 from src.core.security import hash as pwdlib_hash
@@ -10,7 +10,15 @@ from src.services.channels import create_channel
 
 class __Manager:
     def _create_admin_user(self) -> tuple[UserModel, str]:
-        random_password = generate_password()
+        if DEV_MODE:
+            random_password = "password"
+            print(
+                "\n\033[33mDevelopment mode is used."
+                + "\n\033[33mIf you didn't intend for that, please stop the app.\n",
+                flush=True,
+            )
+        else:
+            random_password = generate_password()
         create_channel(ChannelCreate(channel=""))
 
         user = UserModel(

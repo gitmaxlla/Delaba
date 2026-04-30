@@ -5,17 +5,17 @@ from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 
 from src.routers.root import router
-from src.database import obj
 from src.internal.setup import manager
 
 from src.core.security import RateLimiter
 from src.core.config import DEV_MODE, ALLOWED_HOSTNAME, LogFilter
 
+from src.core.exceptions import register_exception_handlers
+
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     logging.getLogger("uvicorn.access").addFilter(LogFilter())
-    obj.create_default_bucket()
     manager.check_app_initialized()
     yield
 
@@ -30,6 +30,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+register_exception_handlers(app)
 
 
 @app.middleware("http")

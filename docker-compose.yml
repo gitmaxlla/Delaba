@@ -5,6 +5,7 @@ services:
     environment:
       - BIND=:5000
       - DIFFICULTY=5
+      - COOKIE_SECURE=false
       - SERVE_ROBOTS_TXT=true
       - TARGET=http://frontend:5173
       - OG_PASSTHROUGH=true
@@ -56,14 +57,11 @@ services:
     build:
       context: ./frontend
       target: production
+      args:
+        VITE_HOSTNAME: ${SERVER_HOSTNAME}
+        VITE_API_VERSION: ${API_VERSION}
     healthcheck:
-      test:
-        [
-          "CMD",
-          "bun",
-          "-e",
-          "fetch('http://localhost:5173').then(r => process.exit(r.ok ? 0 : 1))",
-        ]
+      test: ["CMD", "curl", "-f", "http://localhost:5173"]
       interval: 10s
       timeout: 30s
       retries: 5
@@ -116,10 +114,6 @@ services:
       retries: 5
       start_period: 10s
       timeout: 3s
-
-  mail-server:
-    image: axllent/mailpit
-    restart: always
 
 volumes:
   postgres_data:

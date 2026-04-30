@@ -3,76 +3,83 @@ services:
     volumes:
       - /var/lib/postgresql/data
 
-  e2e-testing:
-    build:
-      context: ./e2e
-    depends_on:
-      backend:
-        condition: service_healthy
-      reverse-proxy:
-        condition: service_healthy
+  object-storage:
     volumes:
-      - ./e2e/:/tests/:Z
+      - /data
 
   backend-unit-testing:
     build:
       context: ./backend
       target: development
     volumes:
-      - ./backend/tests/unit/:/backend/tests/unit/:Z
+      # Could be good to make uv work with /backend/ mount
+      - ./backend/tests/:/backend/tests/:Z
+      - ./backend/src/:/backend/src/:Z
     env_file:
       - .env
-    depends_on:
-      relational-db:
-        condition: service_healthy
-    command: uv run pytest tests/unit
+    command: uv run python -m pytest -s tests/unit
 
   backend-integration-testing:
     build:
       context: ./backend
       target: development
     volumes:
-      - ./backend/tests/integration/:/backend/tests/integration/:Z
+      - ./backend/tests/:/backend/tests/:Z
+      - ./backend/src/:/backend/src/:Z
+      - ./backend/migrations/:/backend/migrations:Z
+      - ./backend/alembic.ini:/backend/alembic.ini:Z
     env_file:
       - .env
     depends_on:
       relational-db:
         condition: service_healthy
-    command: uv run pytest tests/integration
+      object-storage:
+        condition: service_healthy
+    command: uv run python -m pytest -s tests/integration
 
   backend-coverage-testing:
     build:
       context: ./backend
       target: development
+    env_file:
+      - .env
+    depends_on:
+      relational-db:
+        condition: service_healthy
+      object-storage:
+        condition: service_healthy
     volumes:
       - ./backend/tests/:/backend/tests/:Z
-    command: uv run python -m pytest --cov=src --cov-report=term ./tests
+      - ./backend/src/:/backend/src/:Z
+      - ./backend/migrations/:/backend/migrations:Z
+      - ./backend/alembic.ini:/backend/alembic.ini:Z
+    command: uv run python -m pytest --cov=src --cov-report=markdown ./tests
 
   frontend-components-testing:
     build:
       context: ./frontend
       target: development
     volumes:
-      - ./frontend/tests/components/:/frontend/tests/components/:Z
+      - ./frontend/:/frontend/:Z
     env_file:
       - .env
     depends_on:
       relational-db:
         condition: service_healthy
-    command: bun test ./tests/components
+    command: bunx vitest ./tests/components
 
   frontend-scenarios-testing:
     build:
       context: ./frontend
       target: development
     volumes:
-      - ./frontend/tests/components/:/frontend/tests/components/:Z
+      - ./frontend/:/frontend/:Z
     env_file:
       - .env
     depends_on:
       relational-db:
         condition: service_healthy
-    command: bun test ./tests/scenarios
+    command: bunx vitest ./tests/scenarios
 
   frontend-coverage-testing:
     build:
@@ -81,3 +88,16 @@ services:
     volumes:
       - ./frontend/tests/:/frontend/tests/:Z
     command: bunx vitest --coverage ./tests
+
+  e2e-testing:
+    build:
+      context: ./e2e
+    depends_on:
+      frontend:
+        condition: service_healthy
+      backend:
+        condition: service_healthy
+      reverse-proxy:
+        condition: service_healthy
+    volumes:
+      - ./e2e/:/tests/:Z

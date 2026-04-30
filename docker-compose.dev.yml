@@ -19,10 +19,24 @@ services:
       - /frontend/app/.react-router
     ports:
       - "5173:5173"
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "bun",
+          "-e",
+          "fetch('http://localhost:5173').then(r => process.exit(r.ok ? 0 : 1))",
+        ]
+      interval: 10s
+      timeout: 30s
+      retries: 5
+      start_period: 10s
     build:
       target: development
 
   mail-server:
+    image: axllent/mailpit
+    restart: always
     ports:
       - "8025:8025"
       - "1025:1025"

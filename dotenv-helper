@@ -21,6 +21,7 @@ CONFIG_FIELDS: dict[str, DotenvEntry] = {
     "SERVER_HOSTNAME": DotenvEntry(
         "https://delaba.ru", "website's domain name to allow CORS"
     ),
+    "API_VERSION": DotenvEntry("1", "API version to use on production"),
     "JWT_REFRESH_SECRET": DotenvEntry(
         str(secrets.token_urlsafe(32)), "default is a randomly generated string."
     ),

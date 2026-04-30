@@ -1,0 +1,36 @@
+// import { render, screen } from "@testing-library/react";
+// import { createRoutesStub } from "react-router";
+// import manage from "~/routes/manage";
+//
+// test("404 on trying to get to admin page", async () => {
+//   const Stub = createRoutesStub([
+//     {
+//       path: "/manage",
+//       Component: manage,
+//       loader: () => ({
+//         filter: {
+//           newestFirst: true,
+//           role: [] as string[],
+//           channel: "",
+//           permissions: [] as number[],
+//           q: "",
+//         },
+//
+//         pagination: {
+//           current: 1,
+//           pageSize: 10,
+//           total: 0,
+//         },
+//
+//         data: 1,
+//       }),
+//     },
+//   ]);
+//
+//   render(<Stub initialEntries={["/manage"]} />);
+//
+//   const message = await screen.findByText(/ой/i);
+//   expect(message).toBeInTheDocument();
+//
+//   screen.debug();
+// });

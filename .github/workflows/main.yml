@@ -1,0 +1,51 @@
+name: Full CI/CD on main push
+on:
+  push:
+    branches:
+      - "main"
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get lastest repo
+        uses: actions/checkout@v4
+
+      # Could also add caching support ideally
+      - name: Use buildx engine
+        uses: docker/setup-buildx-action@v4
+
+      - name: Install just runner
+        uses: extractions/setup-just@v3
+
+      # Would be of course better to pass all envs individually
+      - name: Push .env
+        run: echo "${{ secrets.ENV_FILE }}" > .env
+
+      - name: Test backend
+        run: just test-backend-coverage
+
+      - name: Test frontend
+        run: just test-frontend-coverage
+
+      - name: Test E2E
+        run: just test-e2e
+
+  deploy:
+    needs: build-and-test
+    runs-on: self-hosted
+    steps:
+      - name: Get latest repo
+        uses: actions/checkout@v4
+
+      - name: Push .env
+        run: echo "${{ secrets.ENV_FILE }}" > .env
+
+      - name: Scaffold production build
+        run: just up-prod
+
+      - name: Cleanup
+        if: always()
+        run: |
+          just down ||
+          rm -f .env

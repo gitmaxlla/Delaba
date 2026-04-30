@@ -1,6 +1,6 @@
 from typing import Any
 
-from sqlalchemy import ForeignKey, String
+from sqlalchemy import JSON, ForeignKey, String
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -24,6 +24,8 @@ class User(Base):
     password_hashed: Mapped[str] = mapped_column(String())
     initialized: Mapped[bool] = mapped_column(default=False)
 
-    data: Mapped[dict[str, Any]] = mapped_column(JSONB, default={})
+    data: Mapped[dict[str, Any]] = mapped_column(
+        JSONB().with_variant(JSON, "sqlite"), default={}
+    )
 
     news: Mapped["News"] = relationship(backref="user", cascade="all, delete")

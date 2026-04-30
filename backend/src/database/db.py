@@ -13,6 +13,14 @@ if not database_exists(engine.url):
 Session = sessionmaker(engine, autocommit=False)
 
 
+def get_db():
+    db = Session()
+    try:
+        yield db
+    finally:
+        db.close()
+
+
 def create_all():
     Base.metadata.create_all(engine)
 

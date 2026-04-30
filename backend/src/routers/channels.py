@@ -1,9 +1,10 @@
 from fastapi import APIRouter, Depends
 from typing import List
+from sqlalchemy.orm import Session
 
 from src.schemas.users import User
 from src.schemas.channels import ChannelCreate
-
+from src.database.db import get_db
 from src.services.auth import admin, logged_in
 from src.services.channels import (
     get_channels as get_channels_service,
@@ -16,8 +17,10 @@ v1_router = APIRouter(prefix="/channels", tags=["channels"])
 
 
 @v1_router.get("/")
-def get_channels(user: User = Depends(logged_in)) -> List[str]:
-    return get_channels_service(user)
+def get_channels(
+    user: User = Depends(logged_in), db: Session = Depends(get_db)
+) -> List[str]:
+    return get_channels_service(user, db)
 
 
 @v1_router.post("/")

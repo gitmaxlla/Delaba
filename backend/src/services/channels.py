@@ -1,10 +1,12 @@
-from src.schemas.channels import ChannelCreate
-from sqlalchemy import select
+from fastapi import Depends
 
+from sqlalchemy import select
+from sqlalchemy.orm import Session
+
+from src.schemas.channels import ChannelCreate
 from src.models.users import User as UserModel
 from src.models.tasks import Task as TaskModel
 from src.models.news import News as NewsModel
-
 from src.schemas.users import User as UserSchema
 from src.schemas.news import News as NewsSchema
 from src.schemas.tasks import Task as TaskSchema
@@ -58,10 +60,9 @@ def tasks_by_channel(channel: str) -> list[TaskSchema]:
     return tasks
 
 
-def get_channels(user: UserSchema) -> list[str]:
+def get_channels(user: UserSchema, session: Session) -> list[str]:
     if has_admin_rights(user.permissions):
-        with db.Session() as session:
-            channels = session.query(Channel).all()
+        channels = session.query(Channel).all()
         return [channel.name for channel in channels]
 
     return [user.channel]

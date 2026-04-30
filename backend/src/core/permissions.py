@@ -1,10 +1,10 @@
 import math
 from enum import IntFlag
-from typing import Optional
+from typing import Optional, Any
 
 from sqlalchemy import Dialect
 from sqlalchemy.dialects.postgresql import BIT
-from sqlalchemy.types import TypeDecorator
+from sqlalchemy.types import String, TypeDecorator, TypeEngine
 
 
 class PermissionTags(IntFlag):
@@ -17,6 +17,11 @@ class PermissionTags(IntFlag):
 class Permissions(TypeDecorator[PermissionTags]):
     impl = BIT
     cache_ok = True
+
+    def load_dialect_impl(self, dialect: Dialect) -> TypeEngine[Any]:
+        if dialect.name == "sqlite":
+            return String().dialect_impl(dialect)
+        return super().load_dialect_impl(dialect)
 
     def __init__(self):
         self.bitlen = int(1 + math.floor(math.log(max(PermissionTags), 2)))
